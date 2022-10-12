@@ -1,10 +1,10 @@
 import Group from "./group/index";
 import Emitter from "./emitter/index";
 import utils from "./utils/index";
-import SPE from "./group/spe"
+import Constants from "./constants/index"
 
 Group.Emitter = Emitter;
 Group.utils = utils;
-Group.SPE = SPE;
+Group.Constants = Constants;
 
 export default Group;

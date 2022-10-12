@@ -124,7 +124,7 @@ export default class ShaderAttribute {
      *
      * If it does, then it will ensure the typed array is of the correct size.
      *
-     * If not, a new SPE.TypedArrayHelper instance will be created.
+     * If not, a new TypedArrayHelper instance will be created.
      *
      * @param  {Number} size The size of the typed array to create or update to.
      */

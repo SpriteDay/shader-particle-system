@@ -1,3 +1,8 @@
+/**
+ * @desc The default delta provided to the System instance
+ * @type {number}
+ */
+export const DEFAULT_SYSTEM_DELTA = 0.0167;
 
 export default {
     /**

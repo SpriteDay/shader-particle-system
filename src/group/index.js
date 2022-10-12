@@ -1,9 +1,10 @@
 import utils from '../utils/index';
 import * as THREE from 'three'
-import SPE from './spe';
+import Constants, {DEFAULT_SYSTEM_DELTA} from '../constants/index';
 import ShaderAttribute from '../helpers/ShaderAttribute'
 import shaders from '../shaders/shaders';
 import Emitter from '../emitter/index';
+
 class Group {
     constructor(options) {
         const types = utils.types;
@@ -13,9 +14,9 @@ class Group {
 
         this.uuid = THREE.MathUtils.generateUUID();
 
-        // If no `deltaTime` value is passed to the `SPE.Group.tick` function,
+        // If no `deltaTime` value is passed to the `Group.tick` function,
         // the value of this property will be used to advance the simulation.
-        this.fixedTimeStep = utils.ensureTypedArg(options.fixedTimeStep, types.NUMBER, 0.016);
+        this.fixedTimeStep = utils.ensureTypedArg(options.fixedTimeStep, types.NUMBER, DEFAULT_SYSTEM_DELTA);
 
         // Set properties used in the uniforms map, starting with the
         // texture stuff.
@@ -107,7 +108,7 @@ class Group {
         this.defines = {
             HAS_PERSPECTIVE: this.hasPerspective,
             COLORIZE: this.colorize,
-            VALUE_OVER_LIFETIME_LENGTH: SPE.valueOverLifetimeLength,
+            VALUE_OVER_LIFETIME_LENGTH: Constants.valueOverLifetimeLength,
 
             SHOULD_ROTATE_TEXTURE: false,
             SHOULD_ROTATE_PARTICLES: false,
@@ -118,7 +119,7 @@ class Group {
 
         // Map of all attributes to be applied to the particles.
         //
-        // See SPE.ShaderAttribute for a bit more info on this bit.
+        // See ShaderAttribute for a bit more info on this bit.
         this.attributes = {
             position: new ShaderAttribute('v3', true),
             acceleration: new ShaderAttribute('v4', true), // w component is drag
@@ -156,7 +157,7 @@ class Group {
         this.mesh = new THREE.Points(this.geometry, this.material);
 
         if (this.maxParticleCount === null) {
-            console.warn('SPE.Group: No maxParticleCount specified. Adding emitters after rendering will probably cause errors.');
+            console.warn('Group: No maxParticleCount specified. Adding emitters after rendering will probably cause errors.');
         }
     }
 
@@ -228,7 +229,7 @@ class Group {
     }
 
     /**
-     * Adds an SPE.Emitter instance to this group, creating particle values and
+     * Adds an Emitter instance to this group, creating particle values and
      * assigning them to this group's shader attributes.
      *
      * @param {Emitter} emitter The emitter to add to this group.
@@ -240,7 +241,7 @@ class Group {
         // rendering would be paused. Logging an error instead
         // of stopping execution if exceptions aren't caught.
         if (emitter instanceof Emitter === false) {
-            console.error('`emitter` argument must be instance of SPE.Emitter. Was provided with:', emitter);
+            console.error('`emitter` argument must be instance of Emitter. Was provided with:', emitter);
             return;
         }
 
@@ -267,7 +268,7 @@ class Group {
 
         // Emit a warning if the emitter being added will exceed the buffer sizes specified.
         if (this.maxParticleCount !== null && this.particleCount > this.maxParticleCount) {
-            console.warn('SPE.Group: maxParticleCount exceeded. Requesting', this.particleCount, 'particles, can support only', this.maxParticleCount);
+            console.warn('Group: maxParticleCount exceeded. Requesting', this.particleCount, 'particles, can support only', this.maxParticleCount);
         }
 
         // Set the `particlesPerSecond` value (PPS) on the emitter.
@@ -336,7 +337,7 @@ class Group {
     }
 
     /**
-     * Removes an SPE.Emitter instance from this group. When called,
+     * Removes an Emitter instance from this group. When called,
      * all particle's belonging to the given emitter will be instantly
      * removed from the scene.
      *
@@ -351,7 +352,7 @@ class Group {
         // rendering would be paused. Logging an error instead
         // of stopping execution if exceptions aren't caught.
         if (emitter instanceof Emitter === false) {
-            console.error('`emitter` argument must be instance of SPE.Emitter. Was provided with:', emitter);
+            console.error('`emitter` argument must be instance of Emitter. Was provided with:', emitter);
             return;
         }
         else if (emitterIndex === -1) {
@@ -428,7 +429,7 @@ class Group {
      */
     releaseIntoPool(emitter) {
         if (emitter instanceof Emitter === false) {
-            console.error('Argument is not instanceof SPE.Emitter:', emitter);
+            console.error('Argument is not instanceof Emitter:', emitter);
             return;
         }
 
@@ -459,10 +460,10 @@ class Group {
         // Create the emitters, add them to this group and the pool.
         for (var i = 0; i < numEmitters; ++i) {
             if (Array.isArray(emitterOptions)) {
-                emitter = new SPE.Emitter(emitterOptions[i]);
+                emitter = new Emitter(emitterOptions[i]);
             }
             else {
-                emitter = new SPE.Emitter(emitterOptions);
+                emitter = new Emitter(emitterOptions);
             }
             this.addEmitter(emitter);
             this.releaseIntoPool(emitter);
@@ -476,7 +477,7 @@ class Group {
             self = this;
 
         if (emitter === null) {
-            console.log('SPE.Group pool ran out.');
+            console.log('Group pool ran out.');
             return;
         }
 
@@ -557,7 +558,7 @@ class Group {
      * attribute values along the way.
      * @param  {Number} [dt=Group's `fixedTimeStep` value] The number of seconds to simulate the group's emitters for (deltaTime)
      */
-    tick(dt) {
+    update(dt) {
         const emitters = this.emitters;
         const numEmitters = emitters.length;
         const deltaTime = dt || this.fixedTimeStep;
@@ -585,7 +586,7 @@ class Group {
         // buffers.
         for (let i = 0, emitter; i < numEmitters; ++i) {
             emitter = emitters[i];
-            emitter.tick(deltaTime);
+            emitter.update(deltaTime);
             this._updateBuffers(emitter);
         }
 

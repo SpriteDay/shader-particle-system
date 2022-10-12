@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 import utils from '../utils/index'
-import SPE from '../group/spe'
+import Constants from '../constants/index';
 
 class Emitter {
     constructor(options) {
         const types = utils.types;
-        const lifetimeLength = SPE.valueOverLifetimeLength;
+        const lifetimeLength = Constants.valueOverLifetimeLength;
 
         options = utils.ensureTypedArg(options, types.OBJECT, {});
         options.position = utils.ensureTypedArg(options.position, types.OBJECT, {});
@@ -26,7 +26,7 @@ class Emitter {
         }
 
         this.uuid = THREE.MathUtils.generateUUID();
-        this.type = utils.ensureTypedArg(options.type, types.NUMBER, SPE.distributions.BOX);
+        this.type = utils.ensureTypedArg(options.type, types.NUMBER, Constants.distributions.BOX);
 
         this.position = {
             _value: utils.ensureInstanceOf(options.position.value, THREE.Vector3, new THREE.Vector3()),
@@ -228,7 +228,7 @@ class Emitter {
                 set(value) {
                     const mapName = self.updateMap[propName];
                     const prevValue = this[key];
-                    const length = SPE.valueOverLifetimeLength;
+                    const length = Constants.valueOverLifetimeLength;
 
                     if (key === '_rotationCenter') {
                         self.updateFlags.rotationCenter = true;
@@ -323,7 +323,7 @@ class Emitter {
     }
 
     _assignPositionValue(index) {
-        const distributions = SPE.distributions;
+        const distributions = Constants.distributions;
         const prop = this.position;
         const attr = this.attributes.position;
         const value = prop._value;
@@ -350,7 +350,7 @@ class Emitter {
     }
 
     _assignForceValue(index, attrName) {
-        const distributions = SPE.distributions;
+        const distributions = Constants.distributions;
         const prop = this[attrName];
         const value = prop._value;
         const spread = prop._spread;
@@ -615,7 +615,7 @@ class Emitter {
         }
     }
 
-    tick(dt) {
+    update(dt) {
         if (this.isStatic) {
             return;
         }
@@ -721,7 +721,6 @@ class Emitter {
 
     /**
      * Remove this emitter from it's parent group (if it has been added to one).
-     * Delgates to SPE.group.prototype.removeEmitter().
      *
      * When called, all particle's belonging to this emitter will be instantly
      * removed from the scene.
