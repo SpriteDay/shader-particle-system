@@ -25,6 +25,9 @@ export interface GroupOptions {
     scale?: number;
 }
 class Group {
+    static Emitter = Emitter;
+    static utils = utils;
+    static Constants = Constants;
     uuid: string;
     fixedTimeStep: number;
     texture: THREE.Texture | null;

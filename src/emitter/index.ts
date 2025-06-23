@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import utils from '../utils/index'
 import Constants from '../constants/index';
-import Group from '../group';
+import type Group from '../group';
 
 interface ShaderAttribute {
     typedArray: {

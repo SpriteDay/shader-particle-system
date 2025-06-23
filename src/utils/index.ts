@@ -6,7 +6,7 @@ import * as THREE from 'three';
  * A clonable object must have a clone method.
  * Many THREE.js objects are clonable.
  */
-interface Clonable {
+export interface Clonable {
     clone(): this;
 }
 
@@ -14,7 +14,7 @@ interface Clonable {
  * A shim interface for a typed array helper used within this utility.
  * It is expected to have methods for setting vector components.
  */
-interface TypedArrayHelper {
+export interface TypedArrayHelper {
     setVec3Components(index: number, x: number, y: number, z: number): void;
     setVec4Components(index: number, x: number, y: number, z: number, w: number): void;
 }
@@ -22,7 +22,7 @@ interface TypedArrayHelper {
 /**
  * Represents a shader attribute, which has a typed array associated with it.
  */
-interface ShaderAttribute {
+export interface ShaderAttribute {
     typedArray: TypedArrayHelper;
 }
 
@@ -30,7 +30,7 @@ interface ShaderAttribute {
  * Represents a property that can change over the lifetime of a particle.
  * It has a value and a spread, which can be single values or arrays of values.
  */
-interface ValueOverLifetime<T> {
+export interface ValueOverLifetime<T> {
     _value: T | T[];
     _spread: T | T[];
 }
