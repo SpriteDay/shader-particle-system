@@ -1,6 +1,23 @@
 import * as THREE from 'three';
 import utils from '../utils/index'
 import Constants from '../constants/index';
+import Group from '../group';
+
+interface ShaderAttribute {
+    typedArray: {
+        array: number[];
+        setVec3Components: (index: number, x: number, y: number, z: number) => void;
+        setVec4Components: (index: number, x: number, y: number, z: number, w: number) => void;
+        setVec3: (index: number, vec: THREE.Vector3) => void;
+    };
+    bufferAttribute: {
+        updateRange: {
+            offset: number;
+            count: number;
+        };
+        needsUpdate: boolean;
+    };
+}
 
 export interface EmitterOptions {
     type?: number;
@@ -156,7 +173,6 @@ interface Angle {
 }
 
 class Emitter {
-    [key: string]: unknown;
     uuid: string;
     type: number;
     position: Position;
@@ -179,12 +195,11 @@ class Emitter {
     particlesPerSecond: number;
     activationIndex: number;
     attributeOffset: number;
-    attributeEnd: number;
     age: number;
     activeParticleCount: number;
-    group: unknown;
-    attributes: unknown;
-    paramsArray: unknown;
+    group: Group | null;
+    attributes: Record<string, ShaderAttribute> | null;
+    paramsArray: number[] | null;
     resetFlags: {
         [key: string]: boolean;
     };
@@ -203,8 +218,9 @@ class Emitter {
             max: number;
         };
     };
-    attributeKeys: string[];
+    attributeKeys: string[] | null;
     attributeCount: number;
+    activationEnd: number;
 
     constructor(options: EmitterOptions) {
         const types = utils.types;
@@ -325,13 +341,11 @@ class Emitter {
         // The current particle index for which particles should
         // be marked as active on the next update cycle.
         this.activationIndex = 0;
+        this.activationEnd = 0;
 
         // The offset in the typed arrays this emitter's
         // particle's values will start at
         this.attributeOffset = 0;
-
-        // The end of the range in the attribute buffers
-        this.attributeEnd = 0;
 
         // Holds the time the emitter has been alive for.
         this.age = 0.0;
@@ -364,8 +378,6 @@ class Emitter {
         // would have to be re-passed to the GPU each frame (since nothing
         // except the `params` attribute would have changed).
         this.resetFlags = {
-            // params: utils.ensureTypedArg( options.maxAge.randomise, types.Boolean, !!options.maxAge.spread ) ||
-            //     utils.ensureTypedArg( options.wiggle.randomise, types.Boolean, !!options.wiggle.spread ),
             position: utils.ensureTypedArg(options.position.randomise, types.Boolean, false) ||
                 utils.ensureTypedArg(options.radius.randomise, types.Boolean, false),
             velocity: utils.ensureTypedArg(options.velocity.randomise, types.Boolean, false),
@@ -403,7 +415,11 @@ class Emitter {
             if (this.updateMap.hasOwnProperty(i)) {
                 this.updateCounts[this.updateMap[i]] = 0.0;
                 this.updateFlags[this.updateMap[i]] = false;
-                this._createGetterSetters(this[i], i);
+                const prop = this[i as keyof Emitter]
+                if (prop === null || typeof prop !== 'object') {
+                    continue;
+                }
+                this._createGetterSetters(prop, i);
             }
         }
 
@@ -421,40 +437,42 @@ class Emitter {
         utils.ensureValueOverLifetimeCompliance(this.angle, lifetimeLength, lifetimeLength);
     }
 
-    _createGetterSetters(propObj: unknown, propName: string) {
+    _createGetterSetters<T extends object>(propObj: T, propName: string) {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const self = this;
-        Object.keys(propObj).forEach(key => {
-            const name = key.replace('_', '');
+        (Object.keys(propObj) as Array<keyof T>).forEach(key => {
+            const name = (key as string).replace('_', '');
             Object.defineProperty(propObj, name, {
-                get() {
-                    return this[key]
+                get(): T[keyof T] {
+                    return this[key];
                 },
-                set(value) {
+                set(value: T[keyof T]) {
                     const mapName = self.updateMap[propName];
                     const prevValue = this[key];
                     const length = Constants.valueOverLifetimeLength;
 
                     if (key === '_rotationCenter') {
                         self.updateFlags.rotationCenter = true;
-                        this.updateCounts.rotationCenter = 0.0;
+                        self.updateCounts.rotationCenter = 0.0;
                     }
                     else if (key === '_randomise') {
-                        self.resetFlags[mapName] = value;
+                        self.resetFlags[mapName] = !!value;
                     }
                     else {
                         self.updateFlags[mapName] = true;
                         self.updateCounts[mapName] = 0.0;
                     }
 
-                    self.group._updateDefines();
+                    if (self.group) {
+                        self.group._updateDefines();
+                    }
 
                     this[key] = value;
 
                     // If the previous value was an array, then make
                     // sure the provided value is interpolated correctly.
                     if (Array.isArray(prevValue)) {
-                        utils.ensureValueOverLifetimeCompliance(self[propName], length, length);
+                        utils.ensureValueOverLifetimeCompliance(self[propName as 'color' | 'opacity' | 'size' | 'angle'], length, length);
                     }
                 }
             })
@@ -528,12 +546,13 @@ class Emitter {
     }
 
     _assignPositionValue(index: number) {
+        if (!this.attributes) { return; }
         const distributions = Constants.distributions;
         const prop = this.position;
         const attr = this.attributes.position;
         const value = prop._value;
         const spread = prop._spread;
-        const distribution = prop.distribution;
+        const distribution = prop._distribution;
 
         switch (distribution) {
             case distributions.BOX:
@@ -541,7 +560,7 @@ class Emitter {
                 break;
 
             case distributions.SPHERE:
-                utils.randomVector3OnSphere(attr, index, value, prop._radius, prop._spread.x, prop._radiusScale, prop._spreadClamp.x, prop._distributionClamp || this.particleCount);
+                utils.randomVector3OnSphere(attr, index, value, prop._radius, prop._spread.x, prop._radiusScale, prop._spreadClamp.x);
                 break;
 
             case distributions.DISC:
@@ -554,7 +573,8 @@ class Emitter {
         }
     }
 
-    _assignForceValue(index: number, attrName: string) {
+    _assignForceValue(index: number, attrName: 'velocity' | 'acceleration') {
+        if (!this.attributes) { return; }
         const distributions = Constants.distributions;
         const prop = this[attrName];
         const value = prop._value;
@@ -622,7 +642,8 @@ class Emitter {
         }
     }
 
-    _assignAbsLifetimeValue(index: number, propName: string) {
+    _assignAbsLifetimeValue(index: number, propName: 'size' | 'opacity') {
+        if (!this.attributes) { return; }
         const array = this.attributes[propName].typedArray;
         const prop = this[propName];
         let value;
@@ -642,11 +663,17 @@ class Emitter {
     }
 
     _assignAngleValue(index: number) {
+        if (!this.attributes) { return; }
         const array = this.attributes.angle.typedArray;
         const prop = this.angle;
         let value;
 
-        if (utils.arrayValuesAreEqual(prop._value) && utils.arrayValuesAreEqual(prop._spread)) {
+        if (
+            Array.isArray(prop._value) &&
+            Array.isArray(prop._spread) &&
+            utils.arrayValuesAreEqual(prop._value) &&
+            utils.arrayValuesAreEqual(prop._spread)
+        ) {
             value = utils.randomFloat(prop._value[0], prop._spread[0]);
             array.setVec4Components(index, value, value, value, value);
         }
@@ -661,6 +688,7 @@ class Emitter {
     }
 
     _assignParamsValue(index: number) {
+        if (!this.attributes) { return; }
         this.attributes.params.typedArray.setVec4Components(index,
             this.isStatic ? 1 : 0,
             0.0,
@@ -670,6 +698,7 @@ class Emitter {
     }
 
     _assignRotationValue(index: number) {
+        if (!this.attributes) { return; }
         this.attributes.rotation.typedArray.setVec3Components(index,
             utils.getPackedRotationAxis(this.rotation._axis, this.rotation._axisSpread),
             utils.randomFloat(this.rotation._angle, this.rotation._angleSpread),
@@ -680,6 +709,7 @@ class Emitter {
     }
 
     _assignColorValue(index: number) {
+        if (!this.attributes) { return; }
         utils.randomColorAsHex(this.attributes.color, index, this.color._value, this.color._spread);
     }
 
@@ -689,6 +719,10 @@ class Emitter {
         const updateCounts = this.updateCounts;
         const keys = this.attributeKeys;
         let key, updateFlag;
+
+        if (!keys) {
+            return;
+        }
 
         for (let i = this.attributeCount - 1; i >= 0; --i) {
             key = keys[i];
@@ -718,12 +752,14 @@ class Emitter {
 
     _resetBufferRanges() {
         const ranges = this.bufferUpdateRanges;
-        const keys = this.bufferUpdateKeys;
-        let i = this.bufferUpdateCount - 1;
-        let key;
+        const keys = this.attributeKeys;
 
-        for (i; i >= 0; --i) {
-            key = keys[i];
+        if (!keys) {
+            return;
+        }
+
+        for (let i = keys.length - 1; i >= 0; --i) {
+            const key = keys[i];
             ranges[key].min = Number.POSITIVE_INFINITY;
             ranges[key].max = Number.NEGATIVE_INFINITY;
         }
@@ -883,11 +919,12 @@ class Emitter {
             const start = this.attributeOffset;
             const end = start + this.particleCount;
             const array = this.paramsArray;
+            if (!this.attributes) { return; }
             const attr = this.attributes.params.bufferAttribute;
 
             for (let i = end - 1, index; i >= start; --i) {
                 index = i * 4;
-
+                if (!array) { return; }
                 array[index] = 0.0;
                 array[index + 1] = 0.0;
             }
@@ -922,7 +959,7 @@ class Emitter {
     disable() {
         this.alive = false;
         return this;
-    };
+    }
 
     /**
      * Remove this emitter from it's parent group (if it has been added to one).
@@ -942,7 +979,7 @@ class Emitter {
         }
 
         return this;
-    };
+    }
 }
 
 export default Emitter;

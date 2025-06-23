@@ -344,7 +344,8 @@ export default {
      * @param  {Array} array The array of values to check equality of.
      * @return {Boolean}       Whether the array's values are all equal or not.
      */
-    arrayValuesAreEqual(array: unknown[]): boolean {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    arrayValuesAreEqual(array: any[]): boolean {
         for (let i = 0; i < array.length - 1; ++i) {
             if (array[i] !== array[i + 1]) {
                 return false;
