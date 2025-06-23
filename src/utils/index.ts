@@ -165,15 +165,15 @@ export default {
             property._spread = [property._spread];
         }
 
-        const valueLength = this.clamp(property._value.length, minLength, maxLength);
-        const spreadLength = this.clamp(property._spread.length, minLength, maxLength);
+        const valueLength = this.clamp((property._value as number[]).length, minLength, maxLength);
+        const spreadLength = this.clamp((property._spread as number[]).length, minLength, maxLength);
         const desiredLength = Math.max(valueLength, spreadLength);
 
-        if (property._value.length !== desiredLength) {
+        if ((property._value as number[]).length !== desiredLength) {
             property._value = this.interpolateArray(property._value as (number | Clonable)[], desiredLength);
         }
 
-        if (property._spread.length !== desiredLength) {
+        if ((property._spread as number[]).length !== desiredLength) {
             property._spread = this.interpolateArray(property._spread as (number | Clonable)[], desiredLength);
         }
     },
@@ -201,11 +201,11 @@ export default {
             const after = Math.ceil(f);
             const delta = f - before;
 
-            newArray[i] = this.lerpTypeAgnostic(srcArray[before], srcArray[after], delta) as T;
+            newArray[i] = this.lerpTypeAgnostic(srcArray[before] as unknown as THREE.Vector3, srcArray[after] as unknown as number | THREE.Vector2 | THREE.Vector3 | THREE.Vector4 | THREE.Color, delta) as T;
         }
 
         newArray.push(
-            (typeof srcArray[sourceLength - 1] === 'object' && srcArray[sourceLength - 1].clone
+            (typeof srcArray[sourceLength - 1] === 'object' && (srcArray[sourceLength - 1] as Clonable).clone
                 ? (srcArray[sourceLength - 1] as Clonable).clone()
                 : srcArray[sourceLength - 1]) as T
         );
