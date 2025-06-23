@@ -185,7 +185,9 @@ class Emitter {
     group: unknown;
     attributes: unknown;
     paramsArray: unknown;
-    resetFlags: unknown;
+    resetFlags: {
+        [key: string]: boolean;
+    };
     updateFlags: {
         [key: string]: boolean;
     };
@@ -195,8 +197,13 @@ class Emitter {
     updateMap: {
         [key: string]: string;
     }
-    bufferUpdateRanges: unknown;
-    attributeKeys: unknown;
+    bufferUpdateRanges: {
+        [key: string]: {
+            min: number;
+            max: number;
+        };
+    };
+    attributeKeys: string[];
     attributeCount: number;
 
     constructor(options: EmitterOptions) {
@@ -391,7 +398,8 @@ class Emitter {
             angle: 'angle'
         };
 
-        for (var i in this.updateMap) {
+        for (const i in this.updateMap) {
+            // eslint-disable-next-line no-prototype-builtins
             if (this.updateMap.hasOwnProperty(i)) {
                 this.updateCounts[this.updateMap[i]] = 0.0;
                 this.updateFlags[this.updateMap[i]] = false;
@@ -414,6 +422,7 @@ class Emitter {
     }
 
     _createGetterSetters(propObj: unknown, propName: string) {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const self = this;
         Object.keys(propObj).forEach(key => {
             const name = key.replace('_', '');
@@ -452,7 +461,7 @@ class Emitter {
         })
     }
 
-    _setBufferUpdateRanges(keys) {
+    _setBufferUpdateRanges(keys: string[]) {
         this.attributeKeys = keys;
         this.attributeCount = keys.length;
 
@@ -464,7 +473,7 @@ class Emitter {
         }
     }
 
-    _calculatePPSValue(groupMaxAge) {
+    _calculatePPSValue(groupMaxAge: number) {
         const particleCount = this.particleCount;
 
         // Calculate the `particlesPerSecond` value for this emitter. It's used
@@ -478,13 +487,13 @@ class Emitter {
         }
     }
 
-    _setAttributeOffset(startIndex) {
+    _setAttributeOffset(startIndex: number) {
         this.attributeOffset = startIndex;
         this.activationIndex = startIndex;
         this.activationEnd = startIndex + this.particleCount;
     }
 
-    _assignValue(prop, index) {
+    _assignValue(prop: string, index: number) {
         switch (prop) {
             case 'position':
                 this._assignPositionValue(index);
@@ -518,7 +527,7 @@ class Emitter {
         }
     }
 
-    _assignPositionValue(index) {
+    _assignPositionValue(index: number) {
         const distributions = Constants.distributions;
         const prop = this.position;
         const attr = this.attributes.position;
@@ -545,7 +554,7 @@ class Emitter {
         }
     }
 
-    _assignForceValue(index, attrName) {
+    _assignForceValue(index: number, attrName: string) {
         const distributions = Constants.distributions;
         const prop = this[attrName];
         const value = prop._value;
@@ -608,12 +617,12 @@ class Emitter {
                 break;
         }
         if (attrName === 'acceleration') {
-            var drag = utils.clamp(utils.randomFloat(this.drag._value, this.drag._spread), 0, 1);
+            const drag = utils.clamp(utils.randomFloat(this.drag._value, this.drag._spread), 0, 1);
             this.attributes.acceleration.typedArray.array[index * 4 + 3] = drag;
         }
     }
 
-    _assignAbsLifetimeValue(index, propName) {
+    _assignAbsLifetimeValue(index: number, propName: string) {
         const array = this.attributes[propName].typedArray;
         const prop = this[propName];
         let value;
@@ -632,7 +641,7 @@ class Emitter {
         }
     }
 
-    _assignAngleValue(index) {
+    _assignAngleValue(index: number) {
         const array = this.attributes.angle.typedArray;
         const prop = this.angle;
         let value;
@@ -651,7 +660,7 @@ class Emitter {
         }
     }
 
-    _assignParamsValue(index) {
+    _assignParamsValue(index: number) {
         this.attributes.params.typedArray.setVec4Components(index,
             this.isStatic ? 1 : 0,
             0.0,
@@ -660,7 +669,7 @@ class Emitter {
         );
     }
 
-    _assignRotationValue(index) {
+    _assignRotationValue(index: number) {
         this.attributes.rotation.typedArray.setVec3Components(index,
             utils.getPackedRotationAxis(this.rotation._axis, this.rotation._axisSpread),
             utils.randomFloat(this.rotation._angle, this.rotation._angleSpread),
@@ -670,11 +679,11 @@ class Emitter {
         this.attributes.rotationCenter.typedArray.setVec3(index, this.rotation._center);
     }
 
-    _assignColorValue(index) {
+    _assignColorValue(index: number) {
         utils.randomColorAsHex(this.attributes.color, index, this.color._value, this.color._spread);
     }
 
-    _resetParticle(index) {
+    _resetParticle(index: number) {
         const resetFlags = this.resetFlags;
         const updateFlags = this.updateFlags;
         const updateCounts = this.updateCounts;
@@ -700,7 +709,7 @@ class Emitter {
         }
     }
 
-    _updateAttributeUpdateRange(attr, i) {
+    _updateAttributeUpdateRange(attr: string, i: number) {
         const ranges = this.bufferUpdateRanges[attr];
 
         ranges.min = Math.min(i, ranges.min);
@@ -739,7 +748,7 @@ class Emitter {
         ++this.activeParticleCount;
     }
 
-    _checkParticleAges(start, end, params, dt) {
+    _checkParticleAges(start: number, end: number, params: number[], dt: number) {
         for (let i = end - 1, index, maxAge, age, alive; i >= start; --i) {
             index = i * 4;
 
@@ -779,10 +788,10 @@ class Emitter {
         }
     }
 
-    _activateParticles(activationStart, activationEnd, params, dtPerParticle) {
+    _activateParticles(activationStart: number, activationEnd: number, params: number[], dtPerParticle: number) {
         const direction = this.direction;
 
-        for (var i = activationStart, index, dtValue; i < activationEnd; ++i) {
+        for (let i = activationStart, index, dtValue; i < activationEnd; ++i) {
             index = i * 4;
 
             if (params[index] !== 0.0 && this.particleCount !== 1) {
@@ -811,7 +820,7 @@ class Emitter {
         }
     }
 
-    update(dt) {
+    update(dt: number) {
         if (this.isStatic) {
             return;
         }
@@ -866,7 +875,7 @@ class Emitter {
         this.age += dt;
     }
 
-    reset(force) {
+    reset(force?: boolean) {
         this.age = 0.0;
         this.alive = false;
 

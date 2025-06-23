@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import Constants, { DEFAULT_SYSTEM_DELTA } from '../constants/index';
 import ShaderAttribute from '../helpers/ShaderAttribute'
 import shaders from '../shaders/shaders';
-import Emitter from '../emitter/index';
+import Emitter, { EmitterOptions } from '../emitter/index';
 
 export interface GroupOptions {
     fixedTimeStep?: number;
@@ -278,7 +278,7 @@ class Group {
     _updateDefines() {
         const emitters = this.emitters;
         let emitter;
-        let defines = this.defines;
+        const defines = this.defines;
 
         for (let i = emitters.length - 1; i >= 0; --i) {
             emitter = emitters[i];
@@ -314,7 +314,7 @@ class Group {
         let attribute, geometryAttribute;
 
         Object.keys(attributes).forEach(attr => {
-            attribute = attributes[attr];
+            attribute = attributes[attr as keyof typeof attributes];
             geometryAttribute = geometryAttributes[attr];
 
             // Update the array if this attribute exists on the geometry.
@@ -348,7 +348,7 @@ class Group {
      *
      * @param {Emitter} emitter The emitter to add to this group.
      */
-    addEmitter(emitter) {
+    addEmitter(emitter: Emitter) {
         // Ensure an actual emitter instance is passed here.
         //
         // Decided not to throw here, just in case a scene's
@@ -404,11 +404,12 @@ class Group {
 
         // Ensure the attributes and their BufferAttributes exist, and their
         // TypedArrays are of the correct size.
-        for (var attr in attributes) {
+        for (const attr in attributes) {
+            // eslint-disable-next-line no-prototype-builtins
             if (attributes.hasOwnProperty(attr)) {
                 // When creating a buffer, pass through the maxParticle count
                 // if one is specified.
-                attributes[attr]._createBufferAttribute(
+                attributes[attr as keyof typeof attributes]._createBufferAttribute(
                     this.maxParticleCount !== null
                         ? this.maxParticleCount
                         : this.particleCount
@@ -439,7 +440,7 @@ class Group {
         this.emitterIDs.push(emitter.uuid);
 
         // Update certain flags to enable shader calculations only if they're necessary.
-        this._updateDefines(emitter);
+        this._updateDefines();
 
         // Update the material since defines might have changed
         this.material.needsUpdate = true;
@@ -457,7 +458,7 @@ class Group {
      *
      * @param {Emitter} emitter The emitter to add to this group.
      */
-    removeEmitter(emitter) {
+    removeEmitter(emitter: Emitter) {
         const emitterIndex = this.emitterIDs.indexOf(emitter, this.uuid);
 
         // Ensure an actual emitter instance is passed here.
@@ -481,7 +482,7 @@ class Group {
         const params = this.attributes.params.typedArray;
 
         // Set alive and age to zero.
-        for (var i = start; i < end; ++i) {
+        for (let i = start; i < end; ++i) {
             params.array[i * 4] = 0.0;
             params.array[i * 4 + 1] = 0.0;
         }
@@ -493,9 +494,10 @@ class Group {
         // Remove this emitter's attribute values from all shader attributes.
         // The `.splice()` call here also marks each attribute's buffer
         // as needing to update it's entire contents.
-        for (var attr in this.attributes) {
+        for (const attr in this.attributes) {
+            // eslint-disable-next-line no-prototype-builtins
             if (this.attributes.hasOwnProperty(attr)) {
-                this.attributes[attr].splice(start, end);
+                this.attributes[attr as keyof typeof this.attributes].splice(start, end);
             }
         }
 
@@ -525,7 +527,7 @@ class Group {
             return pool.pop();
         }
         else if (createNew) {
-            var emitter = new Emitter(this._poolCreationSettings);
+            const emitter = new Emitter(this._poolCreationSettings);
 
             this.addEmitter(emitter);
 
@@ -541,7 +543,7 @@ class Group {
      * @param  {ShaderParticleEmitter} emitter
      * @return {Group} This group instance.
      */
-    releaseIntoPool(emitter) {
+    releaseIntoPool(emitter: Emitter) {
         if (emitter instanceof Emitter === false) {
             console.error('Argument is not instanceof Emitter:', emitter);
             return;
@@ -565,14 +567,14 @@ class Group {
      * @param {Boolean} createNew       Should a new emitter be created if the pool runs out?
      * @return {Group} This group instance.
      */
-    addPool(numEmitters, emitterOptions, createNew) {
+    addPool(numEmitters: number, emitterOptions: EmitterOptions | EmitterOptions[], createNew: boolean) {
         let emitter;
         // Save relevant settings and flags.
         this._poolCreationSettings = emitterOptions;
         this._createNewWhenPoolEmpty = !!createNew;
 
         // Create the emitters, add them to this group and the pool.
-        for (var i = 0; i < numEmitters; ++i) {
+        for (let i = 0; i < numEmitters; ++i) {
             if (Array.isArray(emitterOptions)) {
                 emitter = new Emitter(emitterOptions[i]);
             }
@@ -586,7 +588,7 @@ class Group {
         return this;
     }
 
-    _triggerSingleEmitter(pos) {
+    _triggerSingleEmitter(pos: THREE.Vector3) {
         const emitter = this.getFromPool(),
             self = this;
 
@@ -623,7 +625,7 @@ class Group {
      * @param  {Object} [position=undefined] A THREE.Vector3 instance describing the position to activate the emitter(s) at.
      * @return {Group} This group instance.
      */
-    triggerPoolEmitter(numEmitters, position) {
+    triggerPoolEmitter(numEmitters: number, position: THREE.Vector3) {
         if (typeof numEmitters === 'number' && numEmitters > 1) {
             for (let i = 0; i < numEmitters; ++i) {
                 this._triggerSingleEmitter(position);
@@ -636,7 +638,7 @@ class Group {
         return this;
     }
 
-    _updateUniforms(dt) {
+    _updateUniforms(dt: number) {
         this.uniforms.runTime.value += dt;
         this.uniforms.deltaTime.value = dt;
     }
@@ -651,7 +653,7 @@ class Group {
         }
     }
 
-    _updateBuffers(emitter) {
+    _updateBuffers(emitter: Emitter) {
         const keys = this.attributeKeys;
         const attrs = this.attributes;
         const emitterRanges = emitter.bufferUpdateRanges;
@@ -672,7 +674,7 @@ class Group {
      * attribute values along the way.
      * @param  {Number} [dt=Group's `fixedTimeStep` value] The number of seconds to simulate the group's emitters for (deltaTime)
      */
-    update(dt) {
+    update(dt: number) {
         const emitters = this.emitters;
         const numEmitters = emitters.length;
         const deltaTime = dt || this.fixedTimeStep;
