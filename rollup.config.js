@@ -1,6 +1,7 @@
 // Rollup configuration
+import typescript from '@rollup/plugin-typescript';
 import babel from '@rollup/plugin-babel';
-import {terser} from 'rollup-plugin-terser';
+import { terser } from 'rollup-plugin-terser';
 import license from 'rollup-plugin-license';
 import pkjson from './package.json';
 import babelrc from './.babelrc.json'
@@ -14,20 +15,25 @@ const banner = `/*!
 *
 */`;
 
-const input = 'src/index.js';
-const isDev = process.env.NODE_ENV == "dev";
+const input = 'src/index.ts';
+const isDev = process.env.NODE_ENV === "dev";
 
 let rconfig;
-if(isDev) {
+if (isDev) {
     rconfig = {
         input,
+        external: ['three'],
         output: {
             file: 'build/shader-particle-system.js',
             format: 'umd',
             name: 'shader-particle-system',
             sourcemap: true,
+            globals: {
+                three: 'THREE'
+            }
         },
         plugins: [
+            typescript({ tsconfig: './tsconfig.json' }),
             babel({
                 babelHelpers: 'bundled',
                 compact: false,
@@ -40,18 +46,23 @@ if(isDev) {
 } else {
     rconfig = {
         input,
+        external: ['three'],
         output: {
             file: 'build/shader-particle-system.min.js',
             format: 'umd',
             name: 'shader-particle-system',
             sourcemap: true,
+            globals: {
+                three: 'THREE'
+            }
         },
         plugins: [
+            typescript({ tsconfig: './tsconfig.json' }),
             babel({
                 exclude: "node_modules/**",
                 babelHelpers: "bundled",
                 babelrc: false,
-                ...babelrc,
+                ...babelrc
             }),
             terser(),
             license({ banner })
