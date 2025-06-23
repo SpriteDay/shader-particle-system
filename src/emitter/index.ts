@@ -648,16 +648,29 @@ class Emitter {
         const prop = this[propName];
         let value;
 
-        if (utils.arrayValuesAreEqual(prop._value) && utils.arrayValuesAreEqual(prop._spread)) {
+        if (
+            Array.isArray(prop._value) &&
+            Array.isArray(prop._spread) &&
+            utils.arrayValuesAreEqual(prop._value) &&
+            utils.arrayValuesAreEqual(prop._spread)
+        ) {
             value = Math.abs(utils.randomFloat(prop._value[0], prop._spread[0]));
             array.setVec4Components(index, value, value, value, value);
         }
         else {
+            const value0 = Array.isArray(prop._value) ? prop._value[0] : prop._value;
+            const value1 = Array.isArray(prop._value) ? prop._value[1] : prop._value;
+            const value2 = Array.isArray(prop._value) ? prop._value[2] : prop._value;
+            const value3 = Array.isArray(prop._value) ? prop._value[3] : prop._value;
+            const spread0 = Array.isArray(prop._spread) ? prop._spread[0] : prop._spread;
+            const spread1 = Array.isArray(prop._spread) ? prop._spread[1] : prop._spread;
+            const spread2 = Array.isArray(prop._spread) ? prop._spread[2] : prop._spread;
+            const spread3 = Array.isArray(prop._spread) ? prop._spread[3] : prop._spread;
             array.setVec4Components(index,
-                Math.abs(utils.randomFloat(prop._value[0], prop._spread[0])),
-                Math.abs(utils.randomFloat(prop._value[1], prop._spread[1])),
-                Math.abs(utils.randomFloat(prop._value[2], prop._spread[2])),
-                Math.abs(utils.randomFloat(prop._value[3], prop._spread[3]))
+                Math.abs(utils.randomFloat(value0, spread0)),
+                Math.abs(utils.randomFloat(value1, spread1)),
+                Math.abs(utils.randomFloat(value2, spread2)),
+                Math.abs(utils.randomFloat(value3, spread3))
             );
         }
     }
@@ -678,11 +691,19 @@ class Emitter {
             array.setVec4Components(index, value, value, value, value);
         }
         else {
+            const value0 = Array.isArray(prop._value) ? prop._value[0] : prop._value;
+            const value1 = Array.isArray(prop._value) ? prop._value[1] : prop._value;
+            const value2 = Array.isArray(prop._value) ? prop._value[2] : prop._value;
+            const value3 = Array.isArray(prop._value) ? prop._value[3] : prop._value;
+            const spread0 = Array.isArray(prop._spread) ? prop._spread[0] : prop._spread;
+            const spread1 = Array.isArray(prop._spread) ? prop._spread[1] : prop._spread;
+            const spread2 = Array.isArray(prop._spread) ? prop._spread[2] : prop._spread;
+            const spread3 = Array.isArray(prop._spread) ? prop._spread[3] : prop._spread;
             array.setVec4Components(index,
-                utils.randomFloat(prop._value[0], prop._spread[0]),
-                utils.randomFloat(prop._value[1], prop._spread[1]),
-                utils.randomFloat(prop._value[2], prop._spread[2]),
-                utils.randomFloat(prop._value[3], prop._spread[3])
+                utils.randomFloat(value0, spread0),
+                utils.randomFloat(value1, spread1),
+                utils.randomFloat(value2, spread2),
+                utils.randomFloat(value3, spread3)
             );
         }
     }
@@ -709,7 +730,7 @@ class Emitter {
     }
 
     _assignColorValue(index: number) {
-        if (!this.attributes) { return; }
+        if (!this.attributes || !Array.isArray(this.color._value) || !Array.isArray(this.color._spread)) { return; }
         utils.randomColorAsHex(this.attributes.color, index, this.color._value, this.color._spread);
     }
 
@@ -861,7 +882,7 @@ class Emitter {
             return;
         }
 
-        if (this.paramsArray === null) {
+        if (this.paramsArray === null && this.attributes) {
             this.paramsArray = this.attributes.params.typedArray.array;
         }
 
@@ -876,7 +897,7 @@ class Emitter {
 
         // Increment age for those particles that are alive,
         // and kill off any particles whose age is over the limit.
-        this._checkParticleAges(start, end, params, dt);
+        this._checkParticleAges(start, end, params as number[], dt);
 
         // If the emitter is dead, reset the age of the emitter to zero,
         // ready to go again if required
@@ -898,7 +919,7 @@ class Emitter {
         const activationCount = activationEnd - this.activationIndex | 0;
         const dtPerParticle = activationCount > 0 ? dt / activationCount : 0;
 
-        this._activateParticles(activationStart, activationEnd, params, dtPerParticle);
+        this._activateParticles(activationStart, activationEnd, params as number[], dtPerParticle);
 
         // Move the activation window forward, soldier.
         this.activationIndex += ppsDt;
