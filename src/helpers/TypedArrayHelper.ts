@@ -14,16 +14,62 @@
  * @param {Number} indexOffset          The index in the array from which to start assigning values. Default `0` if none provided
  */
 
+type TypedArray =
+    | Int8Array
+    | Uint8Array
+    | Uint8ClampedArray
+    | Int16Array
+    | Uint16Array
+    | Int32Array
+    | Uint32Array
+    | Float32Array
+    | Float64Array;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TypedArrayConstructor = new (...args: any[]) => TypedArray;
+
+interface Vector2 {
+    x: number;
+    y: number;
+}
+interface Vector3 {
+    x: number;
+    y: number;
+    z: number;
+}
+interface Vector4 {
+    x: number;
+    y: number;
+    z: number;
+    w: number;
+}
+interface Color {
+    r: number;
+    g: number;
+    b: number;
+}
+interface Matrix3 {
+    elements: TypedArray;
+}
+interface Matrix4 {
+    elements: TypedArray;
+}
 class TypedArrayHelper {
-    constructor(TypedArrayConstructor, size, componentSize, indexOffset) {
+    componentSize: number;
+    size: number;
+    TypedArrayConstructor: TypedArrayConstructor;
+    array: TypedArray;
+    indexOffset: number;
+
+    constructor(TypedArrayConstructor?: TypedArrayConstructor, size?: number, componentSize?: number, indexOffset?: number) {
         this.componentSize = componentSize || 1;
         this.size = size || 1;
         this.TypedArrayConstructor = TypedArrayConstructor || Float32Array;
-        this.array = new TypedArrayConstructor(size * this.componentSize);
+        this.array = new this.TypedArrayConstructor(this.size * this.componentSize);
         this.indexOffset = indexOffset || 0;
     }
 
-    setSize(size, noComponentMultiply) {
+    setSize(size: number, noComponentMultiply?: boolean): this | undefined {
         const currentArraySize = this.array.length;
 
         if (!noComponentMultiply) {
@@ -45,7 +91,7 @@ class TypedArrayHelper {
      * @param  {Number} size The new size of the typed array. Must be smaller than `this.array.length`.
      * @return {TypedArrayHelper}      Instance of this class.
      */
-    shrink(size) {
+    shrink(size: number): this {
         this.array = this.array.subarray(0, size);
         this.size = size;
         return this;
@@ -56,7 +102,7 @@ class TypedArrayHelper {
      * @param  {Number} size The new size of the typed array. Must be larger than `this.array.length`.
      * @return {TypedArrayHelper}      Instance of this class.
      */
-    grow(size) {
+    grow(size: number): this {
         const newArray = new this.TypedArrayConstructor(size);
 
         newArray.set(this.array);
@@ -72,11 +118,11 @@ class TypedArrayHelper {
      * @param  {Number} end The end index of the splice. Will be multiplied by the number of components for this attribute.
      * @returns {Object} The TypedArrayHelper instance.
      */
-    splice(start, end) {
+    splice(start: number, end: number): this {
         const startOffset = start * this.componentSize;
         const endOffset = end * this.componentSize;
 
-        const data = [];
+        const data: number[] = [];
         const size = this.array.length;
 
         for (let i = 0; i < size; ++i) {
@@ -98,7 +144,7 @@ class TypedArrayHelper {
      * @param {TypedArray} array The array from which to copy; the source array.
      * @return {TypedArrayHelper} Instance of this class.
      */
-    setFromArray(index, array) {
+    setFromArray(index: number, array: TypedArray | number[]): this {
         const sourceArraySize = array.length;
         const newSize = index + sourceArraySize;
 
@@ -121,7 +167,7 @@ class TypedArrayHelper {
      * @param {Vector2} vec2  Any object that has `x` and `y` properties.
      * @return {TypedArrayHelper} Instance of this class.
      */
-    setVec2(index, vec2) {
+    setVec2(index: number, vec2: Vector2): this {
         return this.setVec2Components(index, vec2.x, vec2.y);
     }
 
@@ -133,16 +179,16 @@ class TypedArrayHelper {
      * @param {Number} y     The Vec2's `y` component.
      * @return {TypedArrayHelper} Instance of this class.
      */
-    setVec2Components (index, x, y) {
+    setVec2Components(index: number, x: number, y: number): this {
         'use strict';
 
         const array = this.array,
             i = this.indexOffset + (index * this.componentSize);
 
-        array[ i ] = x;
-        array[ i + 1 ] = y;
+        array[i] = x;
+        array[i + 1] = y;
         return this;
-    };
+    }
 
     /**
      * Set a Vector3 value at `index`.
@@ -151,7 +197,7 @@ class TypedArrayHelper {
      * @param {Vector3} vec2  Any object that has `x`, `y`, and `z` properties.
      * @return {TypedArrayHelper} Instance of this class.
      */
-    setVec3(index, vec3) {
+    setVec3(index: number, vec3: Vector3): this {
         return this.setVec3Components(index, vec3.x, vec3.y, vec3.z);
     }
 
@@ -164,7 +210,7 @@ class TypedArrayHelper {
      * @param {Number} z     The Vec3's `z` component.
      * @return {TypedArrayHelper} Instance of this class.
      */
-    setVec3Components(index, x, y, z) {
+    setVec3Components(index: number, x: number, y: number, z: number): this {
         const array = this.array;
         const i = this.indexOffset + (index * this.componentSize);
 
@@ -181,7 +227,7 @@ class TypedArrayHelper {
      * @param {Vector4} vec2  Any object that has `x`, `y`, `z`, and `w` properties.
      * @return {TypedArrayHelper} Instance of this class.
      */
-    setVec4(index, vec4) {
+    setVec4(index: number, vec4: Vector4): this {
         return this.setVec4Components(index, vec4.x, vec4.y, vec4.z, vec4.w);
     }
 
@@ -195,7 +241,7 @@ class TypedArrayHelper {
      * @param {Number} w     The Vec4's `w` component.
      * @return {TypedArrayHelper} Instance of this class.
      */
-    setVec4Components(index, x, y, z, w) {
+    setVec4Components(index: number, x: number, y: number, z: number, w: number): this {
         const array = this.array;
         const i = this.indexOffset + (index * this.componentSize);
 
@@ -213,7 +259,7 @@ class TypedArrayHelper {
      * @param {Matrix3} mat3 The 3x3 matrix to set from. Must have a TypedArray property named `elements` to copy from.
      * @return {TypedArrayHelper} Instance of this class.
      */
-    setMat3(index, mat3) {
+    setMat3(index: number, mat3: Matrix3): this {
         return this.setFromArray(this.indexOffset + (index * this.componentSize), mat3.elements);
     }
 
@@ -224,7 +270,7 @@ class TypedArrayHelper {
      * @param {Matrix4} mat3 The 4x4 matrix to set from. Must have a TypedArray property named `elements` to copy from.
      * @return {TypedArrayHelper} Instance of this class.
      */
-    setMat4(index, mat4) {
+    setMat4(index: number, mat4: Matrix4): this {
         return this.setFromArray(this.indexOffset + (index * this.componentSize), mat4.elements);
     }
 
@@ -235,7 +281,7 @@ class TypedArrayHelper {
      * @param {Color} color  Any object that has `r`, `g`, and `b` properties.
      * @return {TypedArrayHelper} Instance of this class.
      */
-    setColor(index, color) {
+    setColor(index: number, color: Color): this {
         return this.setVec3Components(index, color.r, color.g, color.b);
     }
 
@@ -246,7 +292,7 @@ class TypedArrayHelper {
      * @param {Number} numericValue  The number to assign to this index in the array.
      * @return {TypedArrayHelper} Instance of this class.
      */
-    setNumber(index, numericValue) {
+    setNumber(index: number, numericValue: number): this {
         this.array[this.indexOffset + (index * this.componentSize)] = numericValue;
         return this;
     }
@@ -261,7 +307,7 @@ class TypedArrayHelper {
      * @param  {Number} index The index in the array to fetch.
      * @return {Number}       The value at the given index.
      */
-    getValueAtIndex(index) {
+    getValueAtIndex(index: number): number {
         return this.array[this.indexOffset + index];
     }
 
@@ -275,9 +321,9 @@ class TypedArrayHelper {
      * @param  {Number} index The index in the array to fetch.
      * @return {TypedArray}       The component value at the given index.
      */
-     getComponentValueAtIndex(index) {
+    getComponentValueAtIndex(index: number): TypedArray {
         return this.array.subarray(this.indexOffset + (index * this.componentSize));
-     }
+    }
 }
 
 export default TypedArrayHelper;
