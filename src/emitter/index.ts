@@ -2,8 +2,123 @@ import * as THREE from 'three';
 import utils from '../utils/index'
 import Constants from '../constants/index';
 
+export interface EmitterOptions {
+    type?: number;
+    position?: {
+        value?: THREE.Vector3;
+        spread?: THREE.Vector3;
+        spreadClamp?: THREE.Vector3;
+        distribution?: number;
+        randomise?: boolean;
+        radius?: number;
+        radiusScale?: THREE.Vector3;
+        distributionClamp?: number;
+    };
+    velocity?: {
+        value?: THREE.Vector3;
+        spread?: THREE.Vector3;
+        distribution?: number;
+        randomise?: boolean;
+    };
+    acceleration?: {
+        value?: THREE.Vector3;
+        spread?: THREE.Vector3;
+        distribution?: number;
+        randomise?: boolean;
+    };
+    radius?: {
+        randomise?: boolean;
+    };
+    drag?: {
+        value?: number;
+        spread?: number;
+        randomise?: boolean;
+    };
+    rotation?: {
+        axis?: THREE.Vector3;
+        axisSpread?: THREE.Vector3;
+        angle?: number;
+        angleSpread?: number;
+        static?: boolean;
+        center?: THREE.Vector3;
+        randomise?: boolean;
+    };
+    color?: {
+        value?: THREE.Color | THREE.Color[];
+        spread?: THREE.Vector3 | THREE.Vector3[];
+        randomise?: boolean;
+    };
+    opacity?: {
+        value?: number | number[];
+        spread?: number | number[];
+        randomise?: boolean;
+    };
+    size?: {
+        value?: number | number[];
+        spread?: number | number[];
+        randomise?: boolean;
+    };
+    angle?: {
+        value?: number | number[];
+        spread?: number | number[];
+        randomise?: boolean;
+    };
+    wiggle?: {
+        value?: number;
+        spread?: number;
+    };
+    maxAge?: {
+        value?: number;
+        spread?: number;
+    };
+    onParticleSpawn?: () => void;
+    particleCount?: number;
+    duration?: number | null;
+    isStatic?: boolean;
+    activeMultiplier?: number;
+    direction?: number;
+    alive?: boolean;
+}
+
 class Emitter {
-    constructor(options) {
+    [key: string]: unknown;
+    uuid: string;
+    type: number;
+    position: unknown;
+    velocity: unknown;
+    acceleration: unknown;
+    drag: unknown;
+    wiggle: unknown;
+    rotation: unknown;
+    maxAge: unknown;
+    color: unknown;
+    opacity: unknown;
+    size: unknown;
+    angle: unknown;
+    particleCount: number;
+    duration: number | null;
+    isStatic: boolean;
+    activeMultiplier: number;
+    direction: number;
+    alive: boolean;
+    particlesPerSecond: number;
+    activationIndex: number;
+    attributeOffset: number;
+    attributeEnd: number;
+    age: number;
+    activeParticleCount: number;
+    group: unknown;
+    attributes: unknown;
+    paramsArray: unknown;
+    resetFlags: unknown;
+    updateFlags: unknown;
+    updateCounts: unknown;
+    updateMap: unknown;
+    bufferUpdateRanges: unknown;
+    attributeKeys: unknown;
+    attributeCount: number;
+
+    constructor(options: EmitterOptions) {
         const types = utils.types;
         const lifetimeLength = Constants.valueOverLifetimeLength;
 
@@ -217,7 +332,7 @@ class Emitter {
         utils.ensureValueOverLifetimeCompliance(this.angle, lifetimeLength, lifetimeLength);
     }
 
-    _createGetterSetters(propObj, propName) {
+    _createGetterSetters(propObj: unknown, propName: string) {
         const self = this;
         Object.keys(propObj).forEach(key => {
             const name = key.replace('_', '');
@@ -234,7 +349,7 @@ class Emitter {
                         self.updateFlags.rotationCenter = true;
                         this.updateCounts.rotationCenter = 0.0;
                     }
-                    else if (prop === '_randomise') {
+                    else if (key === '_randomise') {
                         self.resetFlags[mapName] = value;
                     }
                     else {
