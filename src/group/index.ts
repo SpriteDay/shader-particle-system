@@ -20,6 +20,9 @@ export interface GroupOptions {
     transparent?: boolean;
     alphaTest?: number;
     depthWrite?: boolean;
+    depthTest?: boolean;
+    fog?: boolean;
+    scale?: number;
 }
 class Group {
     uuid: string;
@@ -28,13 +31,95 @@ class Group {
     textureFrames: THREE.Vector2;
     textureFrameCount: number;
     textureLoop: number;
+
     hasPerspective: boolean;
     colorize: boolean;
+
     maxParticleCount: number | null;
-    blending: number;
+
+    blending: THREE.Blending;
     transparent: boolean;
     alphaTest: number;
     depthWrite: boolean;
+    depthTest: boolean;
+    fog: boolean;
+    scale: number;
+
+    emitters: Emitter[];
+    emitterIDs: string[];
+
+    _pool: Emitter[];
+    _poolCreationSettings: GroupOptions | null;
+    _createNewWhenPoolEmpty: number;
+
+    _attributesNeedRefresh: boolean;
+    _attributesNeedDynamicReset: boolean;
+    particleCount: number;
+    uniforms: {
+        tex: {
+            type: string;
+            value: THREE.Texture | null;
+        };
+        textureAnimation: {
+            type: string;
+            value: THREE.Vector4;
+        };
+        fogColor: {
+            type: string;
+            value: THREE.Color | null;
+        };
+        fogNear: {
+            type: string;
+            value: number;
+        };
+        fogFar: {
+            type: string;
+            value: number;
+        };
+        fogDensity: {
+            type: string;
+            value: number;
+        };
+        deltaTime: {
+            type: string;
+            value: number;
+        };
+        runTime: {
+            type: string;
+            value: number;
+        };
+        scale: {
+            type: string;
+            value: number;
+        };
+    };
+    defines: {
+        HAS_PERSPECTIVE: boolean;
+        COLORIZE: boolean;
+        VALUE_OVER_LIFETIME_LENGTH: number;
+        SHOULD_ROTATE_TEXTURE: boolean;
+        SHOULD_ROTATE_PARTICLES: boolean;
+        SHOULD_WIGGLE_PARTICLES: boolean;
+        SHOULD_CALCULATE_SPRITE: boolean;
+    };
+    attributes: {
+        position: ShaderAttribute;
+        acceleration: ShaderAttribute;
+        velocity: ShaderAttribute;
+        rotation: ShaderAttribute;
+        rotationCenter: ShaderAttribute;
+        params: ShaderAttribute;
+        size: ShaderAttribute;
+        angle: ShaderAttribute;
+        color: ShaderAttribute;
+        opacity: ShaderAttribute;
+    };
+    attributeKeys: string[];
+    attributeCount: number;
+    material: THREE.ShaderMaterial;
+    geometry: THREE.BufferGeometry;
+    mesh: THREE.Points;
+
     constructor(options: GroupOptions) {
         const types = utils.types;
 
@@ -63,7 +148,7 @@ class Group {
         // Set properties used to define the ShaderMaterial's appearance.
         this.blending = utils.ensureTypedArg(options.blending, types.NUMBER, THREE.AdditiveBlending);
         this.transparent = utils.ensureTypedArg(options.transparent, types.Boolean, true);
-        this.alphaTest = parseFloat(utils.ensureTypedArg(options.alphaTest, types.NUMBER, 0.0));
+        this.alphaTest = utils.ensureTypedArg(options.alphaTest, types.NUMBER, 0.0);
         this.depthWrite = utils.ensureTypedArg(options.depthWrite, types.Boolean, false);
         this.depthTest = utils.ensureTypedArg(options.depthTest, types.Boolean, true);
         this.fog = utils.ensureTypedArg(options.fog, types.Boolean, true);
