@@ -1,22 +1,32 @@
 import * as THREE from 'three';
 import TypedArrayHelper from './TypedArrayHelper';
 
+type TypedArray =
+    | Int8Array
+    | Uint8Array
+    | Uint8ClampedArray
+    | Int16Array
+    | Uint16Array
+    | Int32Array
+    | Uint32Array
+    | Float32Array
+    | Float64Array;
+
+type TypedArrayConstructor = new (...args: unknown[]) => TypedArray;
+
+type TypeSizeKey = "f" | "v2" | "v3" | "v4" | "c" | "m3" | "m4";
+
 export default class ShaderAttribute {
-    constructor(type, dynamicBuffer, arrayType) {
-        const typeMap = ShaderAttribute.typeSizeMap;
+    type: TypeSizeKey;
+    componentSize: number;
+    arrayType: TypedArrayConstructor;
+    typedArray: TypedArrayHelper | null;
+    bufferAttribute: THREE.BufferAttribute | null;
+    dynamicBuffer: boolean;
+    updateMin: number;
+    updateMax: number;
 
-        this.type = typeof type === 'string' && typeMap.hasOwnProperty(type) ? type : 'f';
-        this.componentSize = typeMap[this.type];
-        this.arrayType = arrayType || Float32Array;
-        this.typedArray = null;
-        this.bufferAttribute = null;
-        this.dynamicBuffer = !!dynamicBuffer;
-
-        this.updateMin = 0;
-        this.updateMax = 0;
-    }
-
-    static typeSizeMap = {
+    static typeSizeMap: Record<TypeSizeKey, number> = {
         /**
         * Float
         * @type {Number}
@@ -60,6 +70,20 @@ export default class ShaderAttribute {
         m4: 16
     }
 
+    constructor(type: keyof typeof ShaderAttribute.typeSizeMap, dynamicBuffer: boolean, arrayType?: TypedArrayConstructor) {
+        const typeMap = ShaderAttribute.typeSizeMap;
+
+        this.type = typeof type === 'string' && Object.prototype.hasOwnProperty.call(typeMap, type) ? type : 'f';
+        this.componentSize = typeMap[this.type];
+        this.arrayType = arrayType || Float32Array;
+        this.typedArray = null;
+        this.bufferAttribute = null;
+        this.dynamicBuffer = !!dynamicBuffer;
+
+        this.updateMin = 0;
+        this.updateMax = 0;
+    }
+
     /**
      * Calculate the minimum and maximum update range for this buffer attribute using
      * component size independant min and max values.
@@ -67,7 +91,7 @@ export default class ShaderAttribute {
      * @param {Number} min The start of the range to mark as needing an update.
      * @param {Number} max The end of the range to mark as needing an update.
      */
-    setUpdateRange(min, max) {
+    setUpdateRange(min: number, max: number): void {
         this.updateMin = Math.min(min * this.componentSize, this.updateMin * this.componentSize);
         this.updateMax = Math.max(max * this.componentSize, this.updateMax * this.componentSize);
     }
@@ -76,25 +100,31 @@ export default class ShaderAttribute {
      * Calculate the number of indices that this attribute should mark as needing
      * updating. Also marks the attribute as needing an update.
      */
-    flagUpdate() {
+    flagUpdate(): void {
         const attr = this.bufferAttribute;
-        const range = attr.updateRange;
 
-        range.offset = this.updateMin;
-        range.count = Math.min((this.updateMax - this.updateMin) + this.componentSize, this.typedArray.array.length);
+        if (!attr || !this.typedArray) {
+            return;
+        }
+
+        attr.clearUpdateRanges();
+        attr.addUpdateRange(this.updateMin, Math.min((this.updateMax - this.updateMin) + this.componentSize, this.typedArray.array.length));
         attr.needsUpdate = true;
     }
 
     /**
      * Reset the index update counts for this attribute
      */
-    resetUpdateRange() {
+    resetUpdateRange(): void {
         this.updateMin = 0;
         this.updateMax = 0;
     }
 
-    resetDynamic() {
-        this.bufferAttribute.useage = this.dynamicBuffer
+    resetDynamic(): void {
+        if (!this.bufferAttribute) {
+            return;
+        }
+        this.bufferAttribute.usage = this.dynamicBuffer
             ? THREE.DynamicDrawUsage
             : THREE.StaticDrawUsage;
     }
@@ -104,16 +134,23 @@ export default class ShaderAttribute {
      * @param  {Number} start The start index of the splice. Will be multiplied by the number of components for this attribute.
      * @param  {Number} end The end index of the splice. Will be multiplied by the number of components for this attribute.
      */
-    splice(start, end) {
+    splice(start: number, end: number): void {
+        if (!this.typedArray) {
+            return;
+        }
         this.typedArray.splice(start, end);
 
         this.forceUpdateAll();
     }
 
-    forceUpdateAll() {
+    forceUpdateAll(): void {
+        if (!this.bufferAttribute || !this.typedArray) {
+            return;
+        }
+
         this.bufferAttribute.array = this.typedArray.array;
-        this.bufferAttribute.updateRange.offset = 0;
-        this.bufferAttribute.updateRange.count = -1;
+        this.bufferAttribute.clearUpdateRanges();
+        this.bufferAttribute.addUpdateRange(0, -1);
 
         this.bufferAttribute.usage = THREE.StaticDrawUsage;
         this.bufferAttribute.needsUpdate = true;
@@ -128,9 +165,9 @@ export default class ShaderAttribute {
      *
      * @param  {Number} size The size of the typed array to create or update to.
      */
-    _ensureTypedArray(size) {
+    _ensureTypedArray(size: number): void {
         if (this.typedArray !== null && this.typedArray.size === size * this.componentSize) {
-
+            // empty
         }
         else if (this.typedArray !== null && this.typedArray.size !== size) {
             this.typedArray.setSize(size);
@@ -149,18 +186,19 @@ export default class ShaderAttribute {
      *
      * @param  {Number} size The size of the typed array to create if one doesn't exist, or resize existing array to.
      */
-    _createBufferAttribute(size) {
+    _createBufferAttribute(size: number): void {
         this._ensureTypedArray(size);
 
         if (this.bufferAttribute !== null) {
-            this.bufferAttribute.array = this.typedArray.array;
+            if (this.typedArray) {
+                this.bufferAttribute.set(this.typedArray.array);
+            }
 
-            this.bufferAttribute.count = this.bufferAttribute.array.length / this.bufferAttribute.itemSize;
             this.bufferAttribute.needsUpdate = true;
             return;
         }
 
-        this.bufferAttribute = new THREE.BufferAttribute(this.typedArray.array, this.componentSize);
+        this.bufferAttribute = new THREE.BufferAttribute(this.typedArray!.array, this.componentSize);
 
         this.bufferAttribute.usage = this.dynamicBuffer ? THREE.DynamicDrawUsage : THREE.StaticDrawUsage;
     }
@@ -169,7 +207,7 @@ export default class ShaderAttribute {
      * Returns the length of the typed array associated with this attribute.
      * @return {Number} The length of the typed array. Will be 0 if no typed array has been created yet.
      */
-    getLength() {
+    getLength(): number {
         if (this.typedArray === null) {
             return 0;
         }
