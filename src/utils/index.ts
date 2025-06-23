@@ -39,9 +39,7 @@ interface ValueOverLifetime<T> {
 type TypeName = 'string' | 'number' | 'boolean' | 'object';
 
 
-// --- UTILS OBJECT ---
-
-const utils = {
+export default {
     /**
      * A map of types used by `utils.ensureTypedArg` and
      * `utils.ensureArrayTypedArg` to compare types against.
@@ -682,5 +680,3 @@ const utils = {
         };
     }())
 };
-
-export default utils;
