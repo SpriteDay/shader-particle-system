@@ -165,9 +165,9 @@ export default {
             property._spread = [property._spread];
         }
 
-        let valueLength = this.clamp(property._value.length, minLength, maxLength),
-            spreadLength = this.clamp(property._spread.length, minLength, maxLength),
-            desiredLength = Math.max(valueLength, spreadLength);
+        const valueLength = this.clamp(property._value.length, minLength, maxLength);
+        const spreadLength = this.clamp(property._spread.length, minLength, maxLength);
+        const desiredLength = Math.max(valueLength, spreadLength);
 
         if (property._value.length !== desiredLength) {
             property._value = this.interpolateArray(property._value as (number | Clonable)[], desiredLength);
@@ -191,15 +191,15 @@ export default {
      * @return {Array}           The interpolated array.
      */
     interpolateArray<T extends number | Clonable>(srcArray: T[], newLength: number): T[] {
-        let sourceLength = srcArray.length,
-            newArray = [(typeof srcArray[0] === 'object' && srcArray[0].clone ? srcArray[0].clone() : srcArray[0]) as T],
-            factor = (sourceLength - 1) / (newLength - 1);
+        const sourceLength = srcArray.length;
+        const newArray = [(typeof srcArray[0] === 'object' ? srcArray[0].clone() : srcArray[0]) as T];
+        const factor = (sourceLength - 1) / (newLength - 1);
 
         for (let i = 1; i < newLength - 1; ++i) {
-            let f = i * factor,
-                before = Math.floor(f),
-                after = Math.ceil(f),
-                delta = f - before;
+            const f = i * factor;
+            const before = Math.floor(f);
+            const after = Math.ceil(f);
+            const delta = f - before;
 
             newArray[i] = this.lerpTypeAgnostic(srcArray[before], srcArray[after], delta) as T;
         }
@@ -234,8 +234,8 @@ export default {
      * @return {Number}           The result of the operation.
      */
     zeroToEpsilon(value: number, randomise?: boolean): number {
-        let epsilon = 0.00001,
-            result = value;
+        const epsilon = 0.00001;
+        let result = value;
 
         result = randomise ? Math.random() * epsilon * 10 : epsilon;
 
@@ -256,12 +256,16 @@ export default {
      *                                               the start and end arguments aren't a supported type, or
      *                                               if their types do not match.
      */
-    lerpTypeAgnostic(start: unknown, end: unknown, delta: number) {
-        let types = this.types,
-            out;
+    lerpTypeAgnostic(
+        start: number | THREE.Vector2 | THREE.Vector3 | THREE.Vector4 | THREE.Color,
+        end: number | THREE.Vector2 | THREE.Vector3 | THREE.Vector4 | THREE.Color,
+        delta: number
+    ) {
+        const types = this.types;
+        let out;
 
         if (typeof start === types.NUMBER && typeof end === types.NUMBER) {
-            return start + ((end - start) * delta);
+            return (start as number) + ((end as number - (start as number)) * delta);
         }
         else if (start instanceof THREE.Vector2 && end instanceof THREE.Vector2) {
             out = start.clone();
@@ -429,7 +433,9 @@ export default {
         attribute.typedArray.setVec3Components(index, r, g, b);
     },
 
-    randomColorAsHex: (function (self) {
+    randomColorAsHex: (function (self: {
+        clamp: (value: number, min: number, max: number) => number;
+    }) {
         const workingColor = new THREE.Color();
 
         /**
@@ -462,7 +468,8 @@ export default {
 
             attribute.typedArray.setVec4Components(index, colors[0] ?? 0, colors[1] ?? 0, colors[2] ?? 0, colors[3] ?? 0);
         };
-    }(this)),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }(this as any)),
 
     /**
      * Given an ShaderAttribute instance, and letious other settings,
@@ -544,7 +551,7 @@ export default {
     },
 
     seededRandom(seed: number): number {
-        let x = Math.sin(seed) * 10000;
+        const x = Math.sin(seed) * 10000;
         return x - (x | 0);
     },
 
@@ -588,7 +595,9 @@ export default {
         attribute.typedArray.setVec3Components(index, x, y, z);
     },
 
-    randomDirectionVector3OnSphere: (function (self) {
+    randomDirectionVector3OnSphere: (function (self: {
+        randomFloat: (base: number, spread: number) => number;
+    }) {
         const v = new THREE.Vector3();
 
         /**
@@ -615,9 +624,12 @@ export default {
 
             attribute.typedArray.setVec3Components(index, v.x, v.y, v.z);
         };
-    }(this)),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }(this as any)),
 
-    randomDirectionVector3OnDisc: (function (self) {
+    randomDirectionVector3OnDisc: (function (self: {
+        randomFloat: (base: number, spread: number) => number;
+    }) {
         const v = new THREE.Vector3();
 
         /**
@@ -644,7 +656,8 @@ export default {
 
             attribute.typedArray.setVec3Components(index, v.x, v.y, 0);
         };
-    }(this)),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }(this as any)),
 
     getPackedRotationAxis: (function () {
         const v = new THREE.Vector3();
