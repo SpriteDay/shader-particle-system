@@ -98,6 +98,39 @@ interface Velocity {
     _randomise: boolean
 }
 
+interface Acceleration {
+    _value: THREE.Vector3
+    _spread: THREE.Vector3
+    _distribution: number
+    _randomise: boolean
+}
+
+interface Drag {
+    _value: number,
+    _spread: number,
+    _randomise: boolean,
+}
+
+interface Wiggle {
+    _value: number,
+    _spread: number,
+}
+
+interface Rotation {
+    _axis: THREE.Vector3;
+    _axisSpread: THREE.Vector3;
+    _angle: number;
+    _angleSpread: number;
+    _static: boolean;
+    _center: THREE.Vector3;
+    _randomise: boolean;
+}
+
+interface MaxAge {
+    _value: number,
+    _spread: number,
+}
+
 interface Color {
     _value: THREE.Color | THREE.Color[]
     _spread: THREE.Vector3 | THREE.Vector3[]
@@ -121,17 +154,18 @@ interface Angle {
     _spread: number | number[]
     _randomise: boolean
 }
+
 class Emitter {
     [key: string]: unknown;
     uuid: string;
     type: number;
     position: Position;
     velocity: Velocity;
-    acceleration: unknown;
-    drag: unknown;
-    wiggle: unknown;
-    rotation: unknown;
-    maxAge: unknown;
+    acceleration: Acceleration;
+    drag: Drag;
+    wiggle: Wiggle;
+    rotation: Rotation;
+    maxAge: MaxAge;
     color: Color;
     opacity: Opacity;
     size: Size;
