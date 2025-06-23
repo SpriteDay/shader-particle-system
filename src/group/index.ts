@@ -5,8 +5,37 @@ import ShaderAttribute from '../helpers/ShaderAttribute'
 import shaders from '../shaders/shaders';
 import Emitter from '../emitter/index';
 
+export interface GroupOptions {
+    fixedTimeStep?: number;
+    texture?: {
+        value?: THREE.Texture;
+        frames?: THREE.Vector2;
+        frameCount?: number;
+        loop?: number;
+    };
+    hasPerspective?: boolean;
+    colorize?: boolean;
+    maxParticleCount?: number | null;
+    blending?: number;
+    transparent?: boolean;
+    alphaTest?: number;
+    depthWrite?: boolean;
+}
 class Group {
-    constructor(options) {
+    uuid: string;
+    fixedTimeStep: number;
+    texture: THREE.Texture | null;
+    textureFrames: THREE.Vector2;
+    textureFrameCount: number;
+    textureLoop: number;
+    hasPerspective: boolean;
+    colorize: boolean;
+    maxParticleCount: number | null;
+    blending: number;
+    transparent: boolean;
+    alphaTest: number;
+    depthWrite: boolean;
+    constructor(options: GroupOptions) {
         const types = utils.types;
 
         options = utils.ensureTypedArg(options, types.OBJECT, {});
@@ -26,18 +55,18 @@ class Group {
         this.textureLoop = utils.ensureTypedArg(options.texture.loop, types.NUMBER, 1);
         this.textureFrames.max(new THREE.Vector2(1, 1));
 
-        this.hasPerspective = utils.ensureTypedArg(options.hasPerspective, types.BOOLEAN, true);
-        this.colorize = utils.ensureTypedArg(options.colorize, types.BOOLEAN, true);
+        this.hasPerspective = utils.ensureTypedArg(options.hasPerspective, types.Boolean, true);
+        this.colorize = utils.ensureTypedArg(options.colorize, types.Boolean, true);
 
         this.maxParticleCount = utils.ensureTypedArg(options.maxParticleCount, types.NUMBER, null);
 
         // Set properties used to define the ShaderMaterial's appearance.
         this.blending = utils.ensureTypedArg(options.blending, types.NUMBER, THREE.AdditiveBlending);
-        this.transparent = utils.ensureTypedArg(options.transparent, types.BOOLEAN, true);
+        this.transparent = utils.ensureTypedArg(options.transparent, types.Boolean, true);
         this.alphaTest = parseFloat(utils.ensureTypedArg(options.alphaTest, types.NUMBER, 0.0));
-        this.depthWrite = utils.ensureTypedArg(options.depthWrite, types.BOOLEAN, false);
-        this.depthTest = utils.ensureTypedArg(options.depthTest, types.BOOLEAN, true);
-        this.fog = utils.ensureTypedArg(options.fog, types.BOOLEAN, true);
+        this.depthWrite = utils.ensureTypedArg(options.depthWrite, types.Boolean, false);
+        this.depthTest = utils.ensureTypedArg(options.depthTest, types.Boolean, true);
+        this.fog = utils.ensureTypedArg(options.fog, types.Boolean, true);
         this.scale = utils.ensureTypedArg(options.scale, types.NUMBER, 300);
 
         // Where emitter's go to curl up in a warm blanket and live
