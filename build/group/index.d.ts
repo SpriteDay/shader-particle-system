@@ -21,47 +21,6 @@ export interface GroupOptions {
     scale?: number;
 }
 declare class Group {
-    static Emitter: typeof Emitter;
-    static utils: {
-        types: {
-            readonly Boolean: "boolean";
-            readonly STRING: "string";
-            readonly NUMBER: "number";
-            readonly OBJECT: "object";
-        };
-        ensureTypedArg<T>(arg: unknown, type: "string" | "number" | "boolean" | "object", defaultValue: T): T;
-        ensureArrayTypedArg<T>(arg: unknown, type: "string" | "number" | "boolean" | "object", defaultValue: T): T;
-        ensureInstanceOf<T, U>(arg: unknown, instance: (new (...args: any[]) => T) | undefined, defaultValue: U): T | U;
-        ensureArrayInstanceOf<T, U>(arg: unknown, instance: (new (...args: any[]) => T) | undefined, defaultValue: U): T[] | U;
-        ensureValueOverLifetimeCompliance(property: import("../utils/index").ValueOverLifetime<unknown>, minLength?: number, maxLength?: number): void;
-        interpolateArray<T extends number | import("../utils/index").Clonable>(srcArray: T[], newLength: number): T[];
-        clamp(value: number, min: number, max: number): number;
-        zeroToEpsilon(value: number, randomise?: boolean): number;
-        lerpTypeAgnostic(start: number | THREE.Vector2 | THREE.Vector3 | THREE.Vector4 | THREE.Color, end: number | THREE.Vector2 | THREE.Vector3 | THREE.Vector4 | THREE.Color, delta: number): number | THREE.Vector2 | THREE.Vector3 | THREE.Vector4 | THREE.Color | undefined;
-        lerp(start: number, end: number, delta: number): number;
-        roundToNearestMultiple(n: number, multiple: number): number;
-        arrayValuesAreEqual(array: any[]): boolean;
-        randomFloat(base: number, spread: number): number;
-        randomVector3(attribute: import("../utils/index").ShaderAttribute, index: number, base: THREE.Vector3, spread: THREE.Vector3, spreadClamp?: THREE.Vector3): void;
-        randomColor(attribute: import("../utils/index").ShaderAttribute, index: number, base: THREE.Color, spread: THREE.Vector3): void;
-        randomColorAsHex: (attribute: import("../utils/index").ShaderAttribute, index: number, base: THREE.Color[], spread: THREE.Vector3[]) => void;
-        randomVector3OnLine(attribute: import("../utils/index").ShaderAttribute, index: number, start: THREE.Vector3, end: THREE.Vector3): void;
-        randomVector3OnSphere(attribute: import("../utils/index").ShaderAttribute, index: number, base: THREE.Vector3, radius: number, radiusSpread: number, radiusScale: THREE.Vector3, radiusSpreadClamp: number): void;
-        seededRandom(seed: number): number;
-        randomVector3OnDisc(attribute: import("../utils/index").ShaderAttribute, index: number, base: THREE.Vector3, radius: number, radiusSpread: number, radiusScale: THREE.Vector3, radiusSpreadClamp: number): void;
-        randomDirectionVector3OnSphere: (attribute: import("../utils/index").ShaderAttribute, index: number, posX: number, posY: number, posZ: number, emitterPosition: THREE.Vector3, speed: number, speedSpread: number) => void;
-        randomDirectionVector3OnDisc: (attribute: import("../utils/index").ShaderAttribute, index: number, posX: number, posY: number, posZ: number, emitterPosition: THREE.Vector3, speed: number, speedSpread: number) => void;
-        getPackedRotationAxis: (axis: THREE.Vector3, axisSpread: THREE.Vector3) => number;
-    };
-    static Constants: {
-        distributions: {
-            BOX: number;
-            SPHERE: number;
-            DISC: number;
-            LINE: number;
-        };
-        valueOverLifetimeLength: number;
-    };
     uuid: string;
     fixedTimeStep: number;
     texture: THREE.Texture | null;

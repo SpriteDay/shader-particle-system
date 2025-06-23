@@ -30,7 +30,8 @@ if (isDev) {
             sourcemap: true,
             globals: {
                 three: 'THREE'
-            }
+            },
+            exports: 'named'
         },
         plugins: [
             typescript({ tsconfig: './tsconfig.json' }),
@@ -54,7 +55,8 @@ if (isDev) {
             sourcemap: true,
             globals: {
                 three: 'THREE'
-            }
+            },
+            exports: 'named'
         },
         plugins: [
             typescript({ tsconfig: './tsconfig.json' }),

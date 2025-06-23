@@ -1,10 +1,24 @@
-import Group from "./group/index";
-import Emitter from "./emitter/index";
+import Group, { GroupOptions } from "./group/index";
+import Emitter, { EmitterOptions } from "./emitter/index";
 import utils from "./utils/index";
-import Constants from "./constants/index"
+import * as Constants from "./constants/index";
 
-Group.Emitter = Emitter;
-Group.utils = utils;
-Group.Constants = Constants;
+const SPE = {
+    Group,
+    Emitter,
+    utils,
+    Constants
+};
 
-export default Group;
+export default SPE;
+export {
+    SPE,
+    Group,
+    Emitter,
+    utils,
+    Constants
+};
+export type {
+    GroupOptions,
+    EmitterOptions
+}
