@@ -22,11 +22,15 @@ let rconfig;
 if (isDev) {
     rconfig = {
         input,
+        external: ['three'],
         output: {
             file: 'build/shader-particle-system.js',
             format: 'umd',
             name: 'shader-particle-system',
-            sourcemap: true
+            sourcemap: true,
+            globals: {
+                three: 'THREE'
+            }
         },
         plugins: [
             typescript({ tsconfig: './tsconfig.json' }),
@@ -42,11 +46,15 @@ if (isDev) {
 } else {
     rconfig = {
         input,
+        external: ['three'],
         output: {
             file: 'build/shader-particle-system.min.js',
             format: 'umd',
             name: 'shader-particle-system',
-            sourcemap: true
+            sourcemap: true,
+            globals: {
+                three: 'THREE'
+            }
         },
         plugins: [
             typescript({ tsconfig: './tsconfig.json' }),
