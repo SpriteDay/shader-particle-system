@@ -1,4 +1,5 @@
 // Rollup configuration
+import typescript from '@rollup/plugin-typescript';
 import babel from '@rollup/plugin-babel';
 import { terser } from 'rollup-plugin-terser';
 import license from 'rollup-plugin-license';
@@ -14,7 +15,7 @@ const banner = `/*!
 *
 */`;
 
-const input = 'src/index.js';
+const input = 'src/index.ts';
 const isDev = process.env.NODE_ENV === "dev";
 
 let rconfig;
@@ -28,6 +29,7 @@ if (isDev) {
             sourcemap: true
         },
         plugins: [
+            typescript({ tsconfig: './tsconfig.json' }),
             babel({
                 babelHelpers: 'bundled',
                 compact: false,
@@ -47,6 +49,7 @@ if (isDev) {
             sourcemap: true
         },
         plugins: [
+            typescript({ tsconfig: './tsconfig.json' }),
             babel({
                 exclude: "node_modules/**",
                 babelHelpers: "bundled",

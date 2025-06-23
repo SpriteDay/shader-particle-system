@@ -1,7 +1,7 @@
 {
-  "parser": "@babel/eslint-parser",
+  "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaVersion": 9,
+    "ecmaVersion": 2020,
     "sourceType": "module",
     "ecmaFeatures": {}
   },
@@ -9,9 +9,13 @@
     "es6": true
   },
   "plugins": [
+    "@typescript-eslint",
     "import",
-    "promise",
-    "standard"
+    "promise"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
   ],
   "globals": {
     "document": false,
@@ -19,6 +23,14 @@
     "window": false
   },
   "rules": {
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "never",
+        "ts": "never"
+      }
+    ],
     "accessor-pairs": "error",
     "arrow-spacing": [
       "error",
@@ -396,5 +408,15 @@
       "error",
       "either"
     ]
+  },
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "extensions": [
+          ".js",
+          ".ts"
+        ]
+      }
+    }
   }
 }
