@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import utils from '../utils/index'
-import Constants from '../constants/index';
+import { distributions, valueOverLifetimeLength } from '../constants/index';
 import type Group from '../group';
 
 interface ShaderAttribute {
@@ -224,7 +224,7 @@ class Emitter {
 
     constructor(options: EmitterOptions) {
         const types = utils.types;
-        const lifetimeLength = Constants.valueOverLifetimeLength;
+        const lifetimeLength = valueOverLifetimeLength;
 
         options = utils.ensureTypedArg(options, types.OBJECT, {});
         options.position = utils.ensureTypedArg(options.position, types.OBJECT, {});
@@ -245,7 +245,7 @@ class Emitter {
         }
 
         this.uuid = THREE.MathUtils.generateUUID();
-        this.type = utils.ensureTypedArg(options.type, types.NUMBER, Constants.distributions.BOX);
+        this.type = utils.ensureTypedArg(options.type, types.NUMBER, distributions.BOX);
 
         this.position = {
             _value: utils.ensureInstanceOf(options.position.value, THREE.Vector3, new THREE.Vector3()),
@@ -449,7 +449,7 @@ class Emitter {
                 set(value: T[keyof T]) {
                     const mapName = self.updateMap[propName];
                     const prevValue = this[key];
-                    const length = Constants.valueOverLifetimeLength;
+                    const length = valueOverLifetimeLength;
 
                     if (key === '_rotationCenter') {
                         self.updateFlags.rotationCenter = true;
@@ -547,7 +547,6 @@ class Emitter {
 
     _assignPositionValue(index: number) {
         if (!this.attributes) { return; }
-        const distributions = Constants.distributions;
         const prop = this.position;
         const attr = this.attributes.position;
         const value = prop._value;
@@ -575,7 +574,6 @@ class Emitter {
 
     _assignForceValue(index: number, attrName: 'velocity' | 'acceleration') {
         if (!this.attributes) { return; }
-        const distributions = Constants.distributions;
         const prop = this[attrName];
         const value = prop._value;
         const spread = prop._spread;

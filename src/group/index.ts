@@ -1,6 +1,6 @@
 import utils from '../utils/index';
 import * as THREE from 'three'
-import Constants, { DEFAULT_SYSTEM_DELTA } from '../constants/index';
+import { DEFAULT_SYSTEM_DELTA, valueOverLifetimeLength } from '../constants/index';
 import ShaderAttribute from '../helpers/ShaderAttribute'
 import shaders from '../shaders/shaders';
 import Emitter, { EmitterOptions } from '../emitter/index';
@@ -222,7 +222,7 @@ class Group {
         this.defines = {
             HAS_PERSPECTIVE: this.hasPerspective,
             COLORIZE: this.colorize,
-            VALUE_OVER_LIFETIME_LENGTH: Constants.valueOverLifetimeLength,
+            VALUE_OVER_LIFETIME_LENGTH: valueOverLifetimeLength,
 
             SHOULD_ROTATE_TEXTURE: false,
             SHOULD_ROTATE_PARTICLES: false,

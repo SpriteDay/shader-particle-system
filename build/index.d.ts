@@ -2,6 +2,7 @@ import Group, { GroupOptions } from "./group/index";
 import Emitter, { EmitterOptions } from "./emitter/index";
 import utils from "./utils/index";
 import * as Constants from "./constants/index";
+import { distributions } from "./constants/index";
 declare const SPE: {
     Group: typeof Group;
     Emitter: typeof Emitter;
@@ -37,7 +38,13 @@ declare const SPE: {
         getPackedRotationAxis: (axis: import("three").Vector3, axisSpread: import("three").Vector3) => number;
     };
     Constants: typeof Constants;
+    distributions: {
+        BOX: number;
+        SPHERE: number;
+        DISC: number;
+        LINE: number;
+    };
 };
 export default SPE;
-export { SPE, Group, Emitter, utils, Constants };
+export { SPE, Group, Emitter, utils, Constants, distributions };
 export type { GroupOptions, EmitterOptions };
