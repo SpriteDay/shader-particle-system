@@ -395,19 +395,7 @@
     "import/first": "error",
     "import/no-duplicates": "error",
     "import/no-webpack-loader-syntax": "error",
-    "promise/param-names": "error",
-    "standard/array-bracket-even-spacing": [
-      "error",
-      "either"
-    ],
-    "standard/computed-property-even-spacing": [
-      "error",
-      "even"
-    ],
-    "standard/object-curly-even-spacing": [
-      "error",
-      "either"
-    ]
+    "promise/param-names": "error"
   },
   "settings": {
     "import/resolver": {
