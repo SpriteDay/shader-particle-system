@@ -49,7 +49,7 @@ class Group {
     emitterIDs: string[];
 
     _pool: Emitter[];
-    _poolCreationSettings: GroupOptions | null;
+    _poolCreationSettings: EmitterOptions | EmitterOptions[] | null;
     _createNewWhenPoolEmpty: number;
 
     _attributesNeedRefresh: boolean;
@@ -277,7 +277,7 @@ class Group {
 
     _updateDefines() {
         const emitters = this.emitters;
-        let emitter;
+        let emitter: Emitter;
         const defines = this.defines;
 
         for (let i = emitters.length - 1; i >= 0; --i) {
@@ -286,21 +286,23 @@ class Group {
             // Only do angle calculation if there's no spritesheet defined.
             //
             // Saves calculations being done and then overwritten in the shaders.
-            if (!defines.SHOULD_CALCULATE_SPRITE) {
+            if (!defines.SHOULD_CALCULATE_SPRITE &&
+                Array.isArray(emitter.angle._value) &&
+                Array.isArray(emitter.angle._spread)) {
                 defines.SHOULD_ROTATE_TEXTURE = defines.SHOULD_ROTATE_TEXTURE || !!Math.max(
-                    Math.max.apply(null, emitter.angle.value),
-                    Math.max.apply(null, emitter.angle.spread)
+                    Math.max.apply(null, emitter.angle._value),
+                    Math.max.apply(null, emitter.angle._spread)
                 );
             }
 
             defines.SHOULD_ROTATE_PARTICLES = defines.SHOULD_ROTATE_PARTICLES || !!Math.max(
-                emitter.rotation.angle,
-                emitter.rotation.angleSpread
+                emitter.rotation._angle,
+                emitter.rotation._angleSpread
             );
 
             defines.SHOULD_WIGGLE_PARTICLES = defines.SHOULD_WIGGLE_PARTICLES || !!Math.max(
-                emitter.wiggle.value,
-                emitter.wiggle.spread
+                emitter.wiggle._value,
+                emitter.wiggle._spread
             );
         }
 
@@ -311,7 +313,7 @@ class Group {
         const attributes = this.attributes;
         const geometry = this.geometry;
         const geometryAttributes = geometry.attributes;
-        let attribute, geometryAttribute;
+        let attribute: ShaderAttribute, geometryAttribute: THREE.BufferAttribute | THREE.InterleavedBufferAttribute | undefined;
 
         Object.keys(attributes).forEach(attr => {
             attribute = attributes[attr as keyof typeof attributes];
@@ -323,16 +325,20 @@ class Group {
             // been resized and reinstantiated, and might now be looking at a
             // different ArrayBuffer, so reference needs updating.
             if (geometryAttribute) {
+                // @ts-expect-error - it was in original code, but of course it's strange
+                // that we assign value to readonly property
                 geometryAttribute.array = attribute.typedArray.array;
             }
 
             // // Add the attribute to the geometry if it doesn't already exist.
-            else {
+            else if (attribute.bufferAttribute) {
                 geometry.setAttribute(attr, attribute.bufferAttribute);
             }
 
             // Mark the attribute as needing an update the next time a frame is rendered.
-            attribute.bufferAttribute.needsUpdate = true;
+            if (attribute.bufferAttribute) {
+                attribute.bufferAttribute.needsUpdate = true;
+            }
         })
 
         // Mark the draw range on the geometry. This will ensure
@@ -400,6 +406,7 @@ class Group {
 
         // Store reference to the attributes on the emitter for
         // easier access during the emitter's tick function.
+        // @ts-expect-error - I don't know - we assign attributes to the same class, wtf can happen?
         emitter.attributes = this.attributes;
 
         // Ensure the attributes and their BufferAttributes exist, and their
@@ -444,7 +451,6 @@ class Group {
 
         // Update the material since defines might have changed
         this.material.needsUpdate = true;
-        this.geometry.needsUpdate = true;
         this._attributesNeedRefresh = true;
 
         // Return the group to enable chaining.
@@ -459,7 +465,7 @@ class Group {
      * @param {Emitter} emitter The emitter to add to this group.
      */
     removeEmitter(emitter: Emitter) {
-        const emitterIndex = this.emitterIDs.indexOf(emitter, this.uuid);
+        const emitterIndex = this.emitterIDs.indexOf(emitter.uuid);
 
         // Ensure an actual emitter instance is passed here.
         //
@@ -483,8 +489,10 @@ class Group {
 
         // Set alive and age to zero.
         for (let i = start; i < end; ++i) {
-            params.array[i * 4] = 0.0;
-            params.array[i * 4 + 1] = 0.0;
+            if (params) {
+                params.array[i * 4] = 0.0;
+                params.array[i * 4 + 1] = 0.0;
+            }
         }
 
         // Remove the emitter from this group's "store".
@@ -527,7 +535,11 @@ class Group {
             return pool.pop();
         }
         else if (createNew) {
-            const emitter = new Emitter(this._poolCreationSettings);
+            if (Array.isArray(this._poolCreationSettings)) {
+                console.error('Group: Cannot create new emitter from pool when pool was initialized with an array of options.');
+                return null;
+            }
+            const emitter = new Emitter(this._poolCreationSettings as EmitterOptions);
 
             this.addEmitter(emitter);
 
@@ -568,10 +580,10 @@ class Group {
      * @return {Group} This group instance.
      */
     addPool(numEmitters: number, emitterOptions: EmitterOptions | EmitterOptions[], createNew: boolean) {
-        let emitter;
+        let emitter: Emitter;
         // Save relevant settings and flags.
         this._poolCreationSettings = emitterOptions;
-        this._createNewWhenPoolEmpty = !!createNew;
+        this._createNewWhenPoolEmpty = createNew ? 1 : 0;
 
         // Create the emitters, add them to this group and the pool.
         for (let i = 0; i < numEmitters; ++i) {
@@ -589,31 +601,32 @@ class Group {
     }
 
     _triggerSingleEmitter(pos: THREE.Vector3) {
-        const emitter = this.getFromPool(),
-            self = this;
+        const emitter = this.getFromPool();
 
         if (emitter === null) {
             console.log('Group pool ran out.');
             return;
         }
 
-        // TODO:
-        // - Make sure buffers are update with thus new position.
-        if (pos instanceof THREE.Vector3) {
-            emitter.position.value.copy(pos);
+        if (emitter) {
+            // TODO:
+            // - Make sure buffers are update with thus new position.
+            if (pos instanceof THREE.Vector3) {
+                emitter.position._value.copy(pos);
 
-            // Trigger the setter for this property to force an
-            // update to the emitter's position attribute.
-            emitter.position.value = emitter.position.value;
+                // Trigger the setter for this property to force an
+                // update to the emitter's position attribute.
+                // I feel myself like we are in react app - reassigning things to themselves to trigger re-render
+                emitter.position._value = emitter.position._value;
+            }
+
+            emitter.enable();
+
+            setTimeout(() => {
+                emitter.disable();
+                this.releaseIntoPool(emitter);
+            }, (Math.max(emitter.duration ?? 0, (emitter.maxAge._value + emitter.maxAge._spread))) * 1000);
         }
-
-        emitter.enable();
-
-        setTimeout(function () {
-            emitter.disable();
-            self.releaseIntoPool(emitter);
-        }, (Math.max(emitter.duration, (emitter.maxAge.value + emitter.maxAge.spread))) * 1000);
-
         return this;
     }
 
@@ -649,7 +662,7 @@ class Group {
         let i = this.attributeCount - 1;
 
         for (i; i >= 0; --i) {
-            attrs[keys[i]].resetUpdateRange();
+            attrs[keys[i] as keyof typeof attrs].resetUpdateRange();
         }
     }
 
@@ -663,7 +676,7 @@ class Group {
         for (i; i >= 0; --i) {
             key = keys[i];
             emitterAttr = emitterRanges[key];
-            attr = attrs[key];
+            attr = attrs[key as keyof typeof attrs];
             attr.setUpdateRange(emitterAttr.min, emitterAttr.max);
             attr.flagUpdate();
         }
@@ -714,7 +727,7 @@ class Group {
             i = this.attributeCount - 1;
 
             for (i; i >= 0; --i) {
-                attrs[keys[i]].resetDynamic();
+                attrs[keys[i] as keyof typeof attrs].resetDynamic();
             }
 
             this._attributesNeedDynamicReset = false;
@@ -727,7 +740,7 @@ class Group {
             i = this.attributeCount - 1;
 
             for (i; i >= 0; --i) {
-                attrs[keys[i]].forceUpdateAll();
+                attrs[keys[i] as keyof typeof attrs].forceUpdateAll();
             }
 
             this._attributesNeedRefresh = false;
