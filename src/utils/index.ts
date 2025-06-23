@@ -19,7 +19,6 @@ interface TypedArrayHelper {
     setVec4Components(index: number, x: number, y: number, z: number, w: number): void;
 }
 
-
 /**
  * Represents a shader attribute, which has a typed array associated with it.
  */
@@ -37,7 +36,6 @@ interface ValueOverLifetime<T> {
 }
 
 type TypeName = 'string' | 'number' | 'boolean' | 'object';
-
 
 export default {
     /**
@@ -97,6 +95,7 @@ export default {
      * @param  {Object} defaultValue A default fallback value if instance check fails
      * @return {Object}              The given value if type check passes, or the default value if it fails.
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ensureInstanceOf<T, U>(arg: unknown, instance: (new (...args: any[]) => T) | undefined, defaultValue: U): T | U {
         if (instance && arg instanceof instance) {
             return arg;
@@ -121,6 +120,7 @@ export default {
      * @param  {Object} defaultValue A default fallback value if instance check fails
      * @return {Object}              The given value if type check passes, or the default value if it fails.
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ensureArrayInstanceOf<T, U>(arg: unknown, instance: (new (...args: any[]) => T) | undefined, defaultValue: U): T[] | U {
         if (Array.isArray(arg)) {
             if (instance) {
@@ -429,7 +429,7 @@ export default {
         attribute.typedArray.setVec3Components(index, r, g, b);
     },
 
-    randomColorAsHex: (function (self: typeof utils) {
+    randomColorAsHex: (function (self) {
         const workingColor = new THREE.Color();
 
         /**
@@ -509,8 +509,8 @@ export default {
         radius: number,
         radiusSpread: number,
         radiusScale: THREE.Vector3,
-        radiusSpreadClamp: number,
-        distributionClamp?: unknown
+        radiusSpreadClamp: number
+        // distributionClamp?: unknown
     ): void {
         const depth = 2 * Math.random() - 1;
         const t = 6.2832 * Math.random();
@@ -588,7 +588,7 @@ export default {
         attribute.typedArray.setVec3Components(index, x, y, z);
     },
 
-    randomDirectionVector3OnSphere: (function (self: typeof utils) {
+    randomDirectionVector3OnSphere: (function (self) {
         const v = new THREE.Vector3();
 
         /**
@@ -617,7 +617,7 @@ export default {
         };
     }(this)),
 
-    randomDirectionVector3OnDisc: (function (self: typeof utils) {
+    randomDirectionVector3OnDisc: (function (self) {
         const v = new THREE.Vector3();
 
         /**
