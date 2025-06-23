@@ -80,21 +80,62 @@ export interface EmitterOptions {
     alive?: boolean;
 }
 
+interface Position {
+    _value: THREE.Vector3
+    _spread: THREE.Vector3
+    _spreadClamp: THREE.Vector3
+    _distribution: number
+    _randomise: boolean
+    _radius: number
+    _radiusScale: THREE.Vector3
+    _distributionClamp: number
+}
+
+interface Velocity {
+    _value: THREE.Vector3
+    _spread: THREE.Vector3
+    _distribution: number
+    _randomise: boolean
+}
+
+interface Color {
+    _value: THREE.Color | THREE.Color[]
+    _spread: THREE.Vector3 | THREE.Vector3[]
+    _randomise: boolean
+}
+
+interface Opacity {
+    _value: number | number[]
+    _spread: number | number[]
+    _randomise: boolean
+}
+
+interface Size {
+    _value: number | number[]
+    _spread: number | number[]
+    _randomise: boolean
+}
+
+interface Angle {
+    _value: number | number[]
+    _spread: number | number[]
+    _randomise: boolean
+}
 class Emitter {
     [key: string]: unknown;
     uuid: string;
     type: number;
-    position: unknown;
-    velocity: unknown;
+    position: Position;
+    velocity: Velocity;
     acceleration: unknown;
     drag: unknown;
     wiggle: unknown;
     rotation: unknown;
     maxAge: unknown;
-    color: unknown;
-    opacity: unknown;
-    size: unknown;
-    angle: unknown;
+    color: Color;
+    opacity: Opacity;
+    size: Size;
+    angle: Angle;
     particleCount: number;
     duration: number | null;
     isStatic: boolean;
@@ -111,9 +152,15 @@ class Emitter {
     attributes: unknown;
     paramsArray: unknown;
     resetFlags: unknown;
-    updateFlags: unknown;
-    updateCounts: unknown;
-    updateMap: unknown;
+    updateFlags: {
+        [key: string]: boolean;
+    };
+    updateCounts: {
+        [key: string]: number;
+    };
+    updateMap: {
+        [key: string]: string;
+    }
     bufferUpdateRanges: unknown;
     attributeKeys: unknown;
     attributeCount: number;
