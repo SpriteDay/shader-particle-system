@@ -97,7 +97,7 @@ export default {
      * @param  {Object} defaultValue A default fallback value if instance check fails
      * @return {Object}              The given value if type check passes, or the default value if it fails.
      */
-    ensureInstanceOf<T, U>(arg: unknown, instance: (new (...args: unknown[]) => T) | undefined, defaultValue: U): T | U {
+    ensureInstanceOf<T, U>(arg: unknown, instance: (new (...args: any[]) => T) | undefined, defaultValue: U): T | U {
         if (instance && arg instanceof instance) {
             return arg;
         }
@@ -121,7 +121,7 @@ export default {
      * @param  {Object} defaultValue A default fallback value if instance check fails
      * @return {Object}              The given value if type check passes, or the default value if it fails.
      */
-    ensureArrayInstanceOf<T, U>(arg: unknown, instance: (new (...args: unknown[]) => T) | undefined, defaultValue: U): T[] | U {
+    ensureArrayInstanceOf<T, U>(arg: unknown, instance: (new (...args: any[]) => T) | undefined, defaultValue: U): T[] | U {
         if (Array.isArray(arg)) {
             if (instance) {
                 for (let i = arg.length - 1; i >= 0; --i) {

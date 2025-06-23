@@ -33,7 +33,7 @@ class Emitter {
             _spread: utils.ensureInstanceOf(options.position.spread, THREE.Vector3, new THREE.Vector3()),
             _spreadClamp: utils.ensureInstanceOf(options.position.spreadClamp, THREE.Vector3, new THREE.Vector3()),
             _distribution: utils.ensureTypedArg(options.position.distribution, types.NUMBER, this.type),
-            _randomise: utils.ensureTypedArg(options.position.randomise, types.BOOLEAN, false),
+            _randomise: utils.ensureTypedArg(options.position.randomise, types.Boolean, false),
             _radius: utils.ensureTypedArg(options.position.radius, types.NUMBER, 10),
             _radiusScale: utils.ensureInstanceOf(options.position.radiusScale, THREE.Vector3, new THREE.Vector3(1, 1, 1)),
             _distributionClamp: utils.ensureTypedArg(options.position.distributionClamp, types.NUMBER, 0)
@@ -43,20 +43,20 @@ class Emitter {
             _value: utils.ensureInstanceOf(options.velocity.value, THREE.Vector3, new THREE.Vector3()),
             _spread: utils.ensureInstanceOf(options.velocity.spread, THREE.Vector3, new THREE.Vector3()),
             _distribution: utils.ensureTypedArg(options.velocity.distribution, types.NUMBER, this.type),
-            _randomise: utils.ensureTypedArg(options.position.randomise, types.BOOLEAN, false)
+            _randomise: utils.ensureTypedArg(options.position.randomise, types.Boolean, false)
         };
 
         this.acceleration = {
             _value: utils.ensureInstanceOf(options.acceleration.value, THREE.Vector3, new THREE.Vector3()),
             _spread: utils.ensureInstanceOf(options.acceleration.spread, THREE.Vector3, new THREE.Vector3()),
             _distribution: utils.ensureTypedArg(options.acceleration.distribution, types.NUMBER, this.type),
-            _randomise: utils.ensureTypedArg(options.position.randomise, types.BOOLEAN, false)
+            _randomise: utils.ensureTypedArg(options.position.randomise, types.Boolean, false)
         };
 
         this.drag = {
             _value: utils.ensureTypedArg(options.drag.value, types.NUMBER, 0),
             _spread: utils.ensureTypedArg(options.drag.spread, types.NUMBER, 0),
-            _randomise: utils.ensureTypedArg(options.position.randomise, types.BOOLEAN, false)
+            _randomise: utils.ensureTypedArg(options.position.randomise, types.Boolean, false)
         };
 
         this.wiggle = {
@@ -69,9 +69,9 @@ class Emitter {
             _axisSpread: utils.ensureInstanceOf(options.rotation.axisSpread, THREE.Vector3, new THREE.Vector3()),
             _angle: utils.ensureTypedArg(options.rotation.angle, types.NUMBER, 0),
             _angleSpread: utils.ensureTypedArg(options.rotation.angleSpread, types.NUMBER, 0),
-            _static: utils.ensureTypedArg(options.rotation.static, types.BOOLEAN, false),
+            _static: utils.ensureTypedArg(options.rotation.static, types.Boolean, false),
             _center: utils.ensureInstanceOf(options.rotation.center, THREE.Vector3, this.position._value.clone()),
-            _randomise: utils.ensureTypedArg(options.position.randomise, types.BOOLEAN, false)
+            _randomise: utils.ensureTypedArg(options.position.randomise, types.Boolean, false)
         };
 
         this.maxAge = {
@@ -84,36 +84,36 @@ class Emitter {
         this.color = {
             _value: utils.ensureArrayInstanceOf(options.color.value, THREE.Color, new THREE.Color()),
             _spread: utils.ensureArrayInstanceOf(options.color.spread, THREE.Vector3, new THREE.Vector3()),
-            _randomise: utils.ensureTypedArg(options.position.randomise, types.BOOLEAN, false)
+            _randomise: utils.ensureTypedArg(options.position.randomise, types.Boolean, false)
         };
 
         this.opacity = {
             _value: utils.ensureArrayTypedArg(options.opacity.value, types.NUMBER, 1),
             _spread: utils.ensureArrayTypedArg(options.opacity.spread, types.NUMBER, 0),
-            _randomise: utils.ensureTypedArg(options.position.randomise, types.BOOLEAN, false)
+            _randomise: utils.ensureTypedArg(options.position.randomise, types.Boolean, false)
         };
 
         this.size = {
             _value: utils.ensureArrayTypedArg(options.size.value, types.NUMBER, 1),
             _spread: utils.ensureArrayTypedArg(options.size.spread, types.NUMBER, 0),
-            _randomise: utils.ensureTypedArg(options.position.randomise, types.BOOLEAN, false)
+            _randomise: utils.ensureTypedArg(options.position.randomise, types.Boolean, false)
         };
 
         this.angle = {
             _value: utils.ensureArrayTypedArg(options.angle.value, types.NUMBER, 0),
             _spread: utils.ensureArrayTypedArg(options.angle.spread, types.NUMBER, 0),
-            _randomise: utils.ensureTypedArg(options.position.randomise, types.BOOLEAN, false)
+            _randomise: utils.ensureTypedArg(options.position.randomise, types.Boolean, false)
         };
 
         // Assign renaining option values.
         this.particleCount = utils.ensureTypedArg(options.particleCount, types.NUMBER, 100);
         this.duration = utils.ensureTypedArg(options.duration, types.NUMBER, null);
-        this.isStatic = utils.ensureTypedArg(options.isStatic, types.BOOLEAN, false);
+        this.isStatic = utils.ensureTypedArg(options.isStatic, types.Boolean, false);
         this.activeMultiplier = utils.ensureTypedArg(options.activeMultiplier, types.NUMBER, 1);
         this.direction = utils.ensureTypedArg(options.direction, types.NUMBER, 1);
 
         // Whether this emitter is alive or not.
-        this.alive = utils.ensureTypedArg(options.alive, types.BOOLEAN, true);
+        this.alive = utils.ensureTypedArg(options.alive, types.Boolean, true);
 
         // The following properties are set internally and are not
         // user-controllable.
@@ -161,19 +161,19 @@ class Emitter {
         // would have to be re-passed to the GPU each frame (since nothing
         // except the `params` attribute would have changed).
         this.resetFlags = {
-            // params: utils.ensureTypedArg( options.maxAge.randomise, types.BOOLEAN, !!options.maxAge.spread ) ||
-            //     utils.ensureTypedArg( options.wiggle.randomise, types.BOOLEAN, !!options.wiggle.spread ),
-            position: utils.ensureTypedArg(options.position.randomise, types.BOOLEAN, false) ||
-                utils.ensureTypedArg(options.radius.randomise, types.BOOLEAN, false),
-            velocity: utils.ensureTypedArg(options.velocity.randomise, types.BOOLEAN, false),
-            acceleration: utils.ensureTypedArg(options.acceleration.randomise, types.BOOLEAN, false) ||
-                utils.ensureTypedArg(options.drag.randomise, types.BOOLEAN, false),
-            rotation: utils.ensureTypedArg(options.rotation.randomise, types.BOOLEAN, false),
-            rotationCenter: utils.ensureTypedArg(options.rotation.randomise, types.BOOLEAN, false),
-            size: utils.ensureTypedArg(options.size.randomise, types.BOOLEAN, false),
-            color: utils.ensureTypedArg(options.color.randomise, types.BOOLEAN, false),
-            opacity: utils.ensureTypedArg(options.opacity.randomise, types.BOOLEAN, false),
-            angle: utils.ensureTypedArg(options.angle.randomise, types.BOOLEAN, false)
+            // params: utils.ensureTypedArg( options.maxAge.randomise, types.Boolean, !!options.maxAge.spread ) ||
+            //     utils.ensureTypedArg( options.wiggle.randomise, types.Boolean, !!options.wiggle.spread ),
+            position: utils.ensureTypedArg(options.position.randomise, types.Boolean, false) ||
+                utils.ensureTypedArg(options.radius.randomise, types.Boolean, false),
+            velocity: utils.ensureTypedArg(options.velocity.randomise, types.Boolean, false),
+            acceleration: utils.ensureTypedArg(options.acceleration.randomise, types.Boolean, false) ||
+                utils.ensureTypedArg(options.drag.randomise, types.Boolean, false),
+            rotation: utils.ensureTypedArg(options.rotation.randomise, types.Boolean, false),
+            rotationCenter: utils.ensureTypedArg(options.rotation.randomise, types.Boolean, false),
+            size: utils.ensureTypedArg(options.size.randomise, types.Boolean, false),
+            color: utils.ensureTypedArg(options.color.randomise, types.Boolean, false),
+            opacity: utils.ensureTypedArg(options.opacity.randomise, types.Boolean, false),
+            angle: utils.ensureTypedArg(options.angle.randomise, types.Boolean, false)
         };
 
         this.updateFlags = {};
