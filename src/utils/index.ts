@@ -434,9 +434,7 @@ export default {
         attribute.typedArray.setVec3Components(index, r, g, b);
     },
 
-    randomColorAsHex: (function (self: {
-        clamp: (value: number, min: number, max: number) => number;
-    }) {
+    randomColorAsHex: (function () {
         const workingColor = new THREE.Color();
 
         /**
@@ -447,7 +445,7 @@ export default {
          * @param  {Object} base      THREE.Color instance describing the start color.
          * @param  {Object} spread    THREE.Vector3 instance describing the random letiance to apply to the start color.
          */
-        return function (attribute: ShaderAttribute, index: number, base: THREE.Color[], spread: THREE.Vector3[]) {
+        return function (this: { clamp: (value: number, min: number, max: number) => number }, attribute: ShaderAttribute, index: number, base: THREE.Color[], spread: THREE.Vector3[]) {
             const numItems = base.length;
             const colors = [];
 
@@ -460,17 +458,16 @@ export default {
                 workingColor.g += (Math.random() * spreadVector.y) - (spreadVector.y * 0.5);
                 workingColor.b += (Math.random() * spreadVector.z) - (spreadVector.z * 0.5);
 
-                workingColor.r = self.clamp(workingColor.r, 0, 1);
-                workingColor.g = self.clamp(workingColor.g, 0, 1);
-                workingColor.b = self.clamp(workingColor.b, 0, 1);
+                workingColor.r = this.clamp(workingColor.r, 0, 1);
+                workingColor.g = this.clamp(workingColor.g, 0, 1);
+                workingColor.b = this.clamp(workingColor.b, 0, 1);
 
                 colors.push(workingColor.getHex());
             }
 
             attribute.typedArray.setVec4Components(index, colors[0] ?? 0, colors[1] ?? 0, colors[2] ?? 0, colors[3] ?? 0);
         };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    }(this as any)),
+    }()),
 
     /**
      * Given an ShaderAttribute instance, and letious other settings,
@@ -596,9 +593,7 @@ export default {
         attribute.typedArray.setVec3Components(index, x, y, z);
     },
 
-    randomDirectionVector3OnSphere: (function (self: {
-        randomFloat: (base: number, spread: number) => number;
-    }) {
+    randomDirectionVector3OnSphere: (function () {
         const v = new THREE.Vector3();
 
         /**
@@ -614,23 +609,20 @@ export default {
          * @param  {Number} speed           The magnitude to apply to the vector.
          * @param  {Number} speedSpread     The amount of randomness to apply to the magnitude.
          */
-        return function (attribute: ShaderAttribute, index: number, posX: number, posY: number, posZ: number, emitterPosition: THREE.Vector3, speed: number, speedSpread: number) {
+        return function (this: { randomFloat: (base: number, spread: number) => number }, attribute: ShaderAttribute, index: number, posX: number, posY: number, posZ: number, emitterPosition: THREE.Vector3, speed: number, speedSpread: number) {
             v.copy(emitterPosition);
 
             v.x -= posX;
             v.y -= posY;
             v.z -= posZ;
 
-            v.normalize().multiplyScalar(-self.randomFloat(speed, speedSpread));
+            v.normalize().multiplyScalar(-this.randomFloat(speed, speedSpread));
 
             attribute.typedArray.setVec3Components(index, v.x, v.y, v.z);
         };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    }(this as any)),
+    }()),
 
-    randomDirectionVector3OnDisc: (function (self: {
-        randomFloat: (base: number, spread: number) => number;
-    }) {
+    randomDirectionVector3OnDisc: (function () {
         const v = new THREE.Vector3();
 
         /**
@@ -646,19 +638,18 @@ export default {
          * @param  {Number} speed           The magnitude to apply to the vector.
          * @param  {Number} speedSpread     The amount of randomness to apply to the magnitude.
          */
-        return function (attribute: ShaderAttribute, index: number, posX: number, posY: number, posZ: number, emitterPosition: THREE.Vector3, speed: number, speedSpread: number) {
+        return function (this: { randomFloat: (base: number, spread: number) => number }, attribute: ShaderAttribute, index: number, posX: number, posY: number, posZ: number, emitterPosition: THREE.Vector3, speed: number, speedSpread: number) {
             v.copy(emitterPosition);
 
             v.x -= posX;
             v.y -= posY;
             v.z -= posZ;
 
-            v.normalize().multiplyScalar(-self.randomFloat(speed, speedSpread));
+            v.normalize().multiplyScalar(-this.randomFloat(speed, speedSpread));
 
             attribute.typedArray.setVec3Components(index, v.x, v.y, 0);
         };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    }(this as any)),
+    }()),
 
     getPackedRotationAxis: (function () {
         const v = new THREE.Vector3();
