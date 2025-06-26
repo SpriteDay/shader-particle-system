@@ -186,7 +186,9 @@ declare const _default: {
      * @param  {Object} spread    THREE.Vector3 instance describing the random letiance to apply to the start color.
      */
     randomColor(attribute: ShaderAttribute, index: number, base: THREE.Color, spread: THREE.Vector3): void;
-    randomColorAsHex: (attribute: ShaderAttribute, index: number, base: THREE.Color[], spread: THREE.Vector3[]) => void;
+    randomColorAsHex: (this: {
+        clamp: (value: number, min: number, max: number) => number;
+    }, attribute: ShaderAttribute, index: number, base: THREE.Color[], spread: THREE.Vector3[]) => void;
     /**
      * Given an ShaderAttribute instance, and letious other settings,
      * assign values to the attribute's array in a `vec3` format.
@@ -232,8 +234,12 @@ declare const _default: {
      * @param  {Number} radiusSpreadClamp What numeric multiple the projected value should be clamped to.
      */
     randomVector3OnDisc(attribute: ShaderAttribute, index: number, base: THREE.Vector3, radius: number, radiusSpread: number, radiusScale: THREE.Vector3, radiusSpreadClamp: number): void;
-    randomDirectionVector3OnSphere: (attribute: ShaderAttribute, index: number, posX: number, posY: number, posZ: number, emitterPosition: THREE.Vector3, speed: number, speedSpread: number) => void;
-    randomDirectionVector3OnDisc: (attribute: ShaderAttribute, index: number, posX: number, posY: number, posZ: number, emitterPosition: THREE.Vector3, speed: number, speedSpread: number) => void;
+    randomDirectionVector3OnSphere: (this: {
+        randomFloat: (base: number, spread: number) => number;
+    }, attribute: ShaderAttribute, index: number, posX: number, posY: number, posZ: number, emitterPosition: THREE.Vector3, speed: number, speedSpread: number) => void;
+    randomDirectionVector3OnDisc: (this: {
+        randomFloat: (base: number, spread: number) => number;
+    }, attribute: ShaderAttribute, index: number, posX: number, posY: number, posZ: number, emitterPosition: THREE.Vector3, speed: number, speedSpread: number) => void;
     getPackedRotationAxis: (axis: THREE.Vector3, axisSpread: THREE.Vector3) => number;
 };
 export default _default;
